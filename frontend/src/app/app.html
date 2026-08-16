@@ -1,0 +1,19 @@
+<header class="site-header">
+  <nav>
+    <a routerLink="/">Pratiyogita</a>
+    <a routerLink="/competitions">Competitions &amp; Tournaments</a>
+    <a routerLink="/leaderboard">Leaderboard</a>
+    <a routerLink="/news">News</a>
+    <a routerLink="/contribute">Contribute</a>
+    @if (auth.isAuthenticated()) {
+      <a routerLink="/register-school">Register school</a>
+      <button type="button" (click)="logout()">Sign out</button>
+    } @else {
+      <button type="button" (click)="login()">Sign in</button>
+    }
+  </nav>
+</header>
+
+<main>
+  <router-outlet />
+</main>
