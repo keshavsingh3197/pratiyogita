@@ -76,12 +76,15 @@ contributions, and publishing news.
 Everything an operator needs is already exposed as `[Authorize(Roles = ...)]` endpoints on
 `Pratiyogita.Api` (school approval queue, competition/fixture/result CRUD, contribution
 verification queue, news CRUD, category/location master-data management, `PUT /api/settings/payments`).
-**Next step, not yet done**: add a new feature area to `admin`'s Angular app (mirroring how it
-already has Notes/ShortLinks/Finance/etc. as self-contained feature folders) with a
-`pratiyogita.service.ts` calling this API's base URL (cross-origin, same bearer token —
-`Pratiyogita.Api`'s CORS already allows the SSO family via `AddKeshavSsoCors`), plus nav entries
-for: School approvals, Competitions & Fixtures, Publish Results, Contribution verification queue,
-News editor, Category/Location master data, Payment settings.
+As a stopgap until that's built, this repo's own frontend now ships a minimal `/admin/data` screen
+(`Admin`-role-guarded, linked from the header as "Manage data") for the three things needed before
+the public pages are useful at all: **Locations**, **Categories**, and the **Payments** UPI id — plus
+an inline "Configure now" shortcut on the Contribute page itself when an Admin views it unconfigured.
+**Next step, not yet done**: move the rest (schools/competitions/fixtures/results/contributions/news)
+into a proper feature area in `admin`'s Angular app (mirroring how it already has
+Notes/ShortLinks/Finance/etc. as self-contained feature folders) with a `pratiyogita.service.ts`
+calling this API's base URL (cross-origin, same bearer token — `Pratiyogita.Api`'s CORS already
+allows the SSO family via `AddKeshavSsoCors`).
 
 ## Contribution / payment flow (Google Pay, PhonePe, Paytm, …)
 
@@ -176,8 +179,8 @@ no `PACKAGES_READ_TOKEN` needed for local builds.
 
 ## Next steps
 
-- [ ] Add the admin-side UI for schools/competitions/fixtures/results/contributions/news/categories/
-      locations/payment settings to the `admin` repo.
+- [ ] Move schools/competitions/fixtures/results/contributions/news admin UI (this repo currently
+      only has `/admin/data` for locations/categories/payments) to the `admin` repo.
 - [ ] Decide on and wire real school `Code` allocation rules (currently set by an Admin at approval time).
 - [ ] Consider a real payment gateway (Razorpay/Cashfree) for automatic contribution verification.
 - [ ] Wire `LocaleService`'s stored language preference to real page-content translation.

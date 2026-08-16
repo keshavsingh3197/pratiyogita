@@ -1,10 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ContributionsService } from '../../core/services/contributions.service';
+import { SettingsService } from '../../core/services/settings.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-contribute',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <h1>Contribute</h1>
     <p>
@@ -36,6 +39,30 @@ import { ContributionsService } from '../../core/services/contributions.service'
           <div class="card upi-card">
             <p>Online (UPI) contributions aren't configured yet — an admin needs to set a payout UPI ID.</p>
             <p>You can still submit a contribution below once you've arranged payment another way.</p>
+
+            @if (auth.hasRole('Admin')) {
+              @if (showConfigureForm()) {
+                <div class="stack configure-form">
+                  <div class="field">
+                    <label for="cfgVpa">UPI VPA</label>
+                    <input id="cfgVpa" [(ngModel)]="configVpa" name="cfgVpa" placeholder="yourname@bank" />
+                  </div>
+                  <div class="field">
+                    <label for="cfgPayee">Payee name</label>
+                    <input id="cfgPayee" [(ngModel)]="configPayeeName" name="cfgPayee" placeholder="Pratiyogita" />
+                  </div>
+                  <button type="button" class="btn btn-primary" (click)="saveConfig()">Save</button>
+                </div>
+              } @else {
+                <button type="button" class="btn btn-outline" (click)="showConfigureForm.set(true)">
+                  Configure now
+                </button>
+              }
+              <p class="admin-hint">
+                Full location/category/payment management lives on the
+                <a routerLink="/admin/data">Manage data</a> screen.
+              </p>
+            }
           </div>
         }
       }
@@ -76,27 +103,41 @@ import { ContributionsService } from '../../core/services/contributions.service'
     .qr-image { width: 180px; height: 180px; margin: var(--space-4) auto; display: block; border-radius: var(--radius-sm); }
     .vpa { font-weight: 700; font-size: 1.1rem; color: var(--fg); }
     .security-note { font-size: 0.78rem; text-align: left; margin-top: var(--space-4); margin-bottom: 0; }
+    .configure-form { text-align: left; margin-top: var(--space-4); }
+    .admin-hint { font-size: 0.8rem; margin-top: var(--space-4); margin-bottom: 0; }
     .anon-check { font-weight: 500; color: var(--fg-muted); margin-bottom: var(--space-4); }
     .anon-check input { width: auto; }
   `,
 })
 export class ContributeComponent {
   private contributionsApi = inject(ContributionsService);
+  private settingsApi = inject(SettingsService);
+  protected readonly auth = inject(AuthService);
+
   protected readonly upi = signal<{ link: string; vpa: string; payeeName: string } | null>(null);
   protected readonly upiChecked = signal(false);
   protected readonly qrDataUrl = signal<string | null>(null);
   protected readonly submitted = signal(false);
+  protected readonly showConfigureForm = signal(false);
 
   protected amount: number | null = null;
   protected name = '';
   protected email = '';
   protected transactionRef = '';
   protected anonymous = false;
+  protected configVpa = '';
+  protected configPayeeName = '';
 
   constructor() {
+    this.loadUpiLink();
+  }
+
+  private loadUpiLink(): void {
     this.contributionsApi.getUpiLink().subscribe({
       next: (res) => {
         this.upiChecked.set(true);
+        this.upi.set(null);
+        this.qrDataUrl.set(null);
         if (res.configured && res.link && res.vpa) {
           this.upi.set({ link: res.link, vpa: res.vpa, payeeName: res.payeeName });
           this.generateQr(res.link);
@@ -113,6 +154,16 @@ export class ContributeComponent {
       .then((QRCode) => QRCode.toDataURL(link, { margin: 1, width: 200 }))
       .then((dataUrl) => this.qrDataUrl.set(dataUrl))
       .catch(() => this.qrDataUrl.set(null));
+  }
+
+  saveConfig(): void {
+    if (!this.configVpa) return;
+    this.settingsApi
+      .updatePayments({ upiVpa: this.configVpa, payeeName: this.configPayeeName || 'Pratiyogita' })
+      .subscribe(() => {
+        this.showConfigureForm.set(false);
+        this.loadUpiLink();
+      });
   }
 
   submit(): void {

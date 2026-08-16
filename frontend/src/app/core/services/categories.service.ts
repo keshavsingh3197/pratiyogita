@@ -11,4 +11,13 @@ export class CategoriesService {
   getAll(type?: CompetitionType) {
     return this.http.get<CompetitionCategory[]>(this.base, { params: type ? { type } : {} });
   }
+
+  /** Admin-only server-side (backend returns 403 for anyone else). */
+  create(req: { name: string; type: CompetitionType }) {
+    return this.http.post<CompetitionCategory>(this.base, req);
+  }
+
+  delete(id: string) {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
 }

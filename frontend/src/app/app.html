@@ -14,6 +14,9 @@
 
     <div class="row header-actions">
       @if (auth.isAuthenticated()) {
+        @if (auth.hasRole('Admin')) {
+          <a routerLink="/admin/data" class="btn btn-outline">Manage data</a>
+        }
         <a routerLink="/register-school" class="btn btn-outline">Register school</a>
         <a routerLink="/settings" class="icon-btn" title="Settings" aria-label="Settings">⚙️</a>
         <button type="button" class="btn btn-outline" (click)="logout()">Sign out</button>
