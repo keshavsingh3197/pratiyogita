@@ -21,12 +21,14 @@ builder.Services.AddSingleton<LocationService>();
 builder.Services.AddSingleton<SchoolService>();
 builder.Services.AddSingleton<StudentProfileService>();
 builder.Services.AddSingleton<CompetitionService>();
+builder.Services.AddSingleton<CategoryService>();
 builder.Services.AddSingleton<RegistrationService>();
 builder.Services.AddSingleton<FixtureService>();
 builder.Services.AddSingleton<ResultService>();
 builder.Services.AddSingleton<LeaderboardService>();
 builder.Services.AddSingleton<ContributionService>();
 builder.Services.AddSingleton<NewsService>();
+builder.Services.AddSingleton<PlatformSettingsService>();
 
 builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection(PaymentOptions.Section));
 
@@ -130,10 +132,12 @@ await app.Services.GetRequiredService<LocationService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<SchoolService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<StudentProfileService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<CompetitionService>().EnsureIndexesAsync();
+await app.Services.GetRequiredService<CategoryService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<RegistrationService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<FixtureService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<ResultService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<ContributionService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<NewsService>().EnsureIndexesAsync();
+await app.Services.GetRequiredService<PlatformSettingsService>().InitAsync();
 
 app.Run();

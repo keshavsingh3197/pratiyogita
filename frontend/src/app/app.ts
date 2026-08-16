@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +11,8 @@ import { AuthService } from './core/services/auth.service';
 })
 export class App {
   protected readonly auth = inject(AuthService);
+  // Instantiated here (not just used) so its constructor effect applies the stored theme on boot.
+  private readonly theme = inject(ThemeService);
   protected readonly year = new Date().getFullYear();
 
   constructor() {

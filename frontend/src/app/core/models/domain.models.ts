@@ -55,3 +55,37 @@ export interface TopContributor {
   total: number;
   contributionCount: number;
 }
+
+export interface Location {
+  id: string;
+  villageOrTown?: string | null;
+  city: string;
+  district?: string | null;
+  state: string;
+  country: string;
+}
+
+export interface CompetitionCategory {
+  id: string;
+  name: string;
+  type: CompetitionType;
+}
+
+export interface PaymentSettings {
+  configured: boolean;
+  upiVpa?: string | null;
+  payeeName: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  schoolId: string;
+  firstName: string;
+  lastName?: string | null;
+  dateOfBirth?: string | null;
+  classGrade?: string | null;
+  academicYear?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  guardianName?: string | null;
+}

@@ -31,5 +31,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/schools/register-school.component').then((m) => m.RegisterSchoolComponent),
   },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

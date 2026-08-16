@@ -39,6 +39,26 @@
   --font: -apple-system, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
 }
 
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand-50: #1e1b4b;
+  --brand-100: #312e81;
+  --brand-500: #818cf8;
+  --brand-600: #a5b4fc;
+  --brand-700: #c7d2fe;
+
+  --ok-100: #14532d;
+  --warn-100: #713f12;
+  --danger-100: #7f1d1d;
+
+  --bg: #0f1115;
+  --surface: #171a21;
+  --border: #2a2e37;
+  --fg: #f3f4f6;
+  --fg-muted: #9ca3af;
+}
+
 * {
   box-sizing: border-box;
 }

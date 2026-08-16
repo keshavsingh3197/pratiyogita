@@ -15,6 +15,7 @@
     <div class="row header-actions">
       @if (auth.isAuthenticated()) {
         <a routerLink="/register-school" class="btn btn-outline">Register school</a>
+        <a routerLink="/settings" class="icon-btn" title="Settings" aria-label="Settings">⚙️</a>
         <button type="button" class="btn btn-outline" (click)="logout()">Sign out</button>
       } @else {
         <button type="button" class="btn btn-primary" (click)="login()">Sign in</button>
@@ -28,7 +29,7 @@
 </main>
 
 <footer class="site-footer">
-  <div class="container row">
+  <div class="container footer-row">
     <span>&copy; {{ year }} Pratiyogita &middot; part of the keshavsingh.in family</span>
     <a routerLink="/contribute">Support this platform</a>
   </div>

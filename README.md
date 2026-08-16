@@ -55,12 +55,17 @@ shared SSO JWT (see below) so auth never has to be re-architected.
 | Results | `results` | `Result` | Generic `Score`/`Rank` per registration — fits marks, runs, goals, time, whatever the category needs. |
 | Contributions | `contributions` | `Contribution` | Donations/sponsorship — see payment flow below. |
 | News | `news_posts` | `NewsPost` | The "what's next" announcements page. |
+| Categories | `competition_categories` | `CompetitionCategory` | Admin-managed master data (e.g. "Mathematics Olympiad", "Cricket (U-14)") — the leaderboard filter and competition forms read from this instead of free text. |
+| Platform settings | `platform_settings` | `PlatformSettings` | Single document, currently just the UPI payout id/payee name — DB-backed and Admin-editable at runtime (see payment flow below), not just an appsettings value. |
 
 ## Auth: SSO resource server (same pattern as `ghar-ledger`)
 
-This app **never logs anyone in**. Every `*.keshavsingh.in` app shares one identity provider
-(`admin.keshavsingh.in` / `id.keshavsingh.in`); `Pratiyogita.Api` only **validates** the JWT that flow
-issues (same `Jwt:Issuer`/`Audience`/`SigningKey` as every sibling app) and keeps its own
+This app **never logs anyone in**. Every `*.keshavsingh.in` app shares one identity provider — but
+note the domain split: `id.keshavsingh.in` is the actual API/backend (this is what `idpUrl` in
+`environment.ts` must point at), while `admin.keshavsingh.in` is only the admin frontend SPA
+(GitHub Pages/Fastly — it has no API behind it and returns a blanket 405 for any non-GET verb).
+`Pratiyogita.Api` only **validates** the JWT that flow issues (same `Jwt:Issuer`/`Audience`/`SigningKey`
+as every sibling app) and keeps its own
 domain-specific data (a `StudentProfile`) keyed by the token's `sub` claim. Role checks
 (`Roles.Admin` / `Roles.Editor` from `KeshavSingh.Core`) gate every write that should be admin-managed:
 approving schools, creating/publishing competitions & results, scheduling fixtures, verifying
@@ -70,12 +75,13 @@ contributions, and publishing news.
 
 Everything an operator needs is already exposed as `[Authorize(Roles = ...)]` endpoints on
 `Pratiyogita.Api` (school approval queue, competition/fixture/result CRUD, contribution
-verification queue, news CRUD). **Next step, not yet done**: add a new feature area to `admin`'s
-Angular app (mirroring how it already has Notes/ShortLinks/Finance/etc. as self-contained feature
-folders) with a `pratiyogita.service.ts` calling this API's base URL (cross-origin, same bearer
-token — `Pratiyogita.Api`'s CORS already allows the SSO family via `AddKeshavSsoCors`), plus nav
-entries for: School approvals, Competitions & Fixtures, Publish Results, Contribution verification
-queue, News editor.
+verification queue, news CRUD, category/location master-data management, `PUT /api/settings/payments`).
+**Next step, not yet done**: add a new feature area to `admin`'s Angular app (mirroring how it
+already has Notes/ShortLinks/Finance/etc. as self-contained feature folders) with a
+`pratiyogita.service.ts` calling this API's base URL (cross-origin, same bearer token —
+`Pratiyogita.Api`'s CORS already allows the SSO family via `AddKeshavSsoCors`), plus nav entries
+for: School approvals, Competitions & Fixtures, Publish Results, Contribution verification queue,
+News editor, Category/Location master data, Payment settings.
 
 ## Contribution / payment flow (Google Pay, PhonePe, Paytm, …)
 
@@ -98,6 +104,48 @@ required to ship this:
 If real-time automatic verification is wanted later (no manual reconciliation), add a
 `IPaymentGatewayClient` (Razorpay/Cashfree, both support UPI + webhooks) behind
 `ContributionService` — the model already has `TransactionRef`/`Status` ready for that.
+
+The QR code shown on the Contribute page is generated **entirely client-side** (the `qrcode` npm
+package, no third-party QR API) from the exact same link/VPA already shown as plain text — nothing
+is sent to an external service just to render a code.
+
+### Configuring the UPI payout id
+
+`Payments:UpiVpa`/`Payments:PayeeName` in `appsettings.json`/environment variables are only the
+**first-run seed** — `PlatformSettingsService` copies them into the `platform_settings` Mongo
+document once, then every request reads from there. To set or change the payout id after that, an
+`Admin` calls `PUT /api/settings/payments` (or the admin app, once built) — don't just edit the seed
+and redeploy expecting it to take effect again. `GET /api/contributions/upi-link` returns
+`{ configured: false }` (not an error) until it's set, which the Contribute page shows as a plain
+"not set up yet" message instead of a broken/empty panel.
+
+### Trust & integrity — stopping a spoofed QR/payment link
+
+The donation flow's biggest real risk isn't this app's code, it's someone tricking a contributor
+into paying an attacker's UPI id instead of the real one. Mitigations already in place:
+
+- The payout VPA is **never client-supplied** — `GET /api/contributions/upi-link` builds the link
+  purely from the server-side `platform_settings` document; there is no request parameter that can
+  override it, so a malicious client can't make the *real* API return someone else's VPA.
+- Changing the VPA is **Admin-role-gated** (`PUT /api/settings/payments`, same JWT/role check as
+  every other admin action) and **audited** (`LastUpdatedByUserId`/`LastUpdatedAt` on the document).
+- The Contribute page always shows the **VPA in plain text right next to the QR code**, specifically
+  so a human can visually verify it before scanning/paying — never trust a QR code (from an email,
+  poster, or chat message) that can't be cross-checked against the VPA shown live on
+  `pratiyogita.keshavsingh.in` itself.
+- Because the frontend is a static site, the VPA is fetched fresh from the API on every page load —
+  it is never baked into the deployed JS bundle, so a stale/cached frontend can't silently keep
+  showing an old (or tampered) id after an Admin rotates it.
+
+## Frontend settings (theme, language, my details)
+
+Signed-in users get a gear icon in the header → `/settings`, with three sections: **My details**
+(read-only SSO account info — name/email/roles come from the shared IdP and can't be edited here —
+plus an editable form for the domain-specific `StudentProfile`: school, class, DOB, phone),
+**Appearance** (light/dark, `ThemeService`, persisted to `localStorage`, applied via a
+`data-theme` attribute the CSS variables in `styles.css` key off), and **Language** (`LocaleService`,
+persisted preference only for now — it doesn't yet translate page content; wiring real i18n against
+that stored preference is a follow-up).
 
 ## Deployment
 
@@ -128,9 +176,11 @@ no `PACKAGES_READ_TOKEN` needed for local builds.
 
 ## Next steps
 
-- [ ] Add the admin-side UI for schools/competitions/fixtures/results/contributions/news to the `admin` repo.
+- [ ] Add the admin-side UI for schools/competitions/fixtures/results/contributions/news/categories/
+      locations/payment settings to the `admin` repo.
 - [ ] Decide on and wire real school `Code` allocation rules (currently set by an Admin at approval time).
 - [ ] Consider a real payment gateway (Razorpay/Cashfree) for automatic contribution verification.
+- [ ] Wire `LocaleService`'s stored language preference to real page-content translation.
 - [ ] Add pagination to list endpoints once data volume grows.
 - [ ] Add unit tests (none included in this initial scaffold — mirrors the shape of existing service
       tests in `admin`/`ghar-ledger`, e.g. `KeshavSingh.*.Tests` conventions).

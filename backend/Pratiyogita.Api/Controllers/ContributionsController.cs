@@ -2,10 +2,8 @@ using KeshavSingh.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
 using Pratiyogita.Api.Dtos;
 using Pratiyogita.Api.Models;
-using Pratiyogita.Api.Options;
 using Pratiyogita.Api.Services;
 
 namespace Pratiyogita.Api.Controllers;
@@ -19,24 +17,28 @@ namespace Pratiyogita.Api.Controllers;
 public class ContributionsController : ControllerBase
 {
     private readonly ContributionService _contributions;
-    private readonly PaymentOptions _payments;
+    private readonly PlatformSettingsService _settings;
 
-    public ContributionsController(ContributionService contributions, IOptions<PaymentOptions> payments)
+    public ContributionsController(ContributionService contributions, PlatformSettingsService settings)
     {
         _contributions = contributions;
-        _payments = payments.Value;
+        _settings = settings;
     }
 
-    /// <summary>The UPI "pay to" deep link/QR target — same one for every UPI app.</summary>
+    /// <summary>The UPI "pay to" deep link/QR target — same one for every UPI app. The VPA/payee
+    /// name are DB-backed (see <see cref="Controllers.SettingsController"/>), never client-supplied —
+    /// this is the only place contributions are told where to go, so it can only be changed by an
+    /// Admin, through an authenticated, audited endpoint.</summary>
     [HttpGet("upi-link")]
     [AllowAnonymous]
-    public ActionResult<object> GetUpiLink([FromQuery] decimal? amount, [FromQuery] string? note)
+    public async Task<ActionResult<object>> GetUpiLink([FromQuery] decimal? amount, [FromQuery] string? note)
     {
-        if (string.IsNullOrWhiteSpace(_payments.UpiVpa))
-            return NotFound("No UPI payout address is configured yet.");
+        var settings = await _settings.GetAsync();
+        if (string.IsNullOrWhiteSpace(settings.UpiVpa))
+            return Ok(new { configured = false, link = (string?)null, vpa = (string?)null, payeeName = settings.PayeeName });
 
-        var link = ContributionService.BuildUpiIntentLink(_payments.UpiVpa, _payments.PayeeName, amount, note);
-        return Ok(new { link, vpa = _payments.UpiVpa, payeeName = _payments.PayeeName });
+        var link = ContributionService.BuildUpiIntentLink(settings.UpiVpa, settings.PayeeName, amount, note);
+        return Ok(new { configured = true, link, vpa = settings.UpiVpa, payeeName = settings.PayeeName });
     }
 
     [HttpPost]

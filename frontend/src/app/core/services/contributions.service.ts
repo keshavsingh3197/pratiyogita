@@ -9,12 +9,18 @@ export class ContributionsService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/contributions`;
 
-  /** Same upi:// deep link works for Google Pay, PhonePe, Paytm and every other UPI app. */
+  /** Same upi:// deep link works for Google Pay, PhonePe, Paytm and every other UPI app. The VPA is
+   *  admin-configured server-side (see /api/settings/payments) — never accepted from the client — so
+   *  it can't be tampered with by editing this page. `configured: false` means an Admin hasn't set a
+   *  payout UPI id yet. */
   getUpiLink(amount?: number, note?: string) {
     const params: Record<string, string> = {};
     if (amount) params['amount'] = String(amount);
     if (note) params['note'] = note;
-    return this.http.get<{ link: string; vpa: string; payeeName: string }>(`${this.base}/upi-link`, { params });
+    return this.http.get<{ configured: boolean; link: string | null; vpa: string | null; payeeName: string }>(
+      `${this.base}/upi-link`,
+      { params }
+    );
   }
 
   submit(req: {

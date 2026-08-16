@@ -1,23 +1,35 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LeaderboardService } from '../../core/services/leaderboard.service';
-import { TopContributor, TopperEntry } from '../../core/models/domain.models';
+import { LocationsService } from '../../core/services/locations.service';
+import { CategoriesService } from '../../core/services/categories.service';
+import { CompetitionCategory, Location, TopContributor, TopperEntry } from '../../core/models/domain.models';
 
 @Component({
   selector: 'app-leaderboard',
   imports: [FormsModule],
   template: `
-    <h1>Toppers</h1>
+    <h1>Top Performers</h1>
     <p>Filter by city or category to see location/field-wise rankings.</p>
 
     <div class="card filter-bar">
       <div class="field">
         <label for="city">City</label>
-        <input id="city" [(ngModel)]="city" (change)="reload()" placeholder="e.g. Bengaluru" />
+        <select id="city" [(ngModel)]="city" (ngModelChange)="reload()">
+          <option value="">All cities</option>
+          @for (c of cities(); track c) {
+            <option [value]="c">{{ c }}</option>
+          }
+        </select>
       </div>
       <div class="field">
         <label for="category">Category</label>
-        <input id="category" [(ngModel)]="category" (change)="reload()" placeholder="e.g. Cricket" />
+        <select id="category" [(ngModel)]="category" (ngModelChange)="reload()">
+          <option value="">All categories</option>
+          @for (c of categories(); track c.id) {
+            <option [value]="c.name">{{ c.name }}</option>
+          }
+        </select>
       </div>
     </div>
 
@@ -72,14 +84,24 @@ import { TopContributor, TopperEntry } from '../../core/models/domain.models';
 })
 export class LeaderboardComponent {
   private leaderboardApi = inject(LeaderboardService);
+  private locationsApi = inject(LocationsService);
+  private categoriesApi = inject(CategoriesService);
+
   protected readonly toppers = signal<TopperEntry[]>([]);
   protected readonly contributors = signal<TopContributor[]>([]);
+  protected readonly cities = signal<string[]>([]);
+  protected readonly categories = signal<CompetitionCategory[]>([]);
   protected city = '';
   protected category = '';
 
   constructor() {
     this.reload();
     this.leaderboardApi.getTopContributors().subscribe((list) => this.contributors.set(list));
+    // City/category options are admin-managed master data, not free text — keeps filtering reliable.
+    this.locationsApi
+      .getAll()
+      .subscribe((list: Location[]) => this.cities.set([...new Set(list.map((l) => l.city))].sort()));
+    this.categoriesApi.getAll().subscribe((list) => this.categories.set(list));
   }
 
   reload(): void {

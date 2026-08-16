@@ -13,13 +13,31 @@ import { ContributionsService } from '../../core/services/contributions.service'
     </p>
 
     <div class="grid contribute-grid">
-      @if (upi(); as u) {
-        <div class="card upi-card">
-          <span class="badge">Pay via UPI</span>
-          <h3>{{ u.payeeName }}</h3>
-          <p class="vpa">{{ u.vpa }}</p>
-          <a [href]="u.link" class="btn btn-accent">Open in a UPI app</a>
-        </div>
+      @if (upiChecked()) {
+        @if (upi(); as u) {
+          <div class="card upi-card">
+            <span class="badge">Pay via UPI</span>
+            <h3>{{ u.payeeName }}</h3>
+
+            @if (qrDataUrl(); as qr) {
+              <img [src]="qr" alt="Scan to pay via UPI" class="qr-image" />
+            }
+
+            <p class="vpa">{{ u.vpa }}</p>
+            <a [href]="u.link" class="btn btn-accent">Open in a UPI app</a>
+
+            <p class="security-note">
+              ⚠️ Only trust the UPI ID shown above (fetched live from our server, never editable on
+              this page). Never pay a QR code or link received by email/message claiming to be us —
+              verify it matches <strong>{{ u.vpa }}</strong> first.
+            </p>
+          </div>
+        } @else {
+          <div class="card upi-card">
+            <p>Online (UPI) contributions aren't configured yet — an admin needs to set a payout UPI ID.</p>
+            <p>You can still submit a contribution below once you've arranged payment another way.</p>
+          </div>
+        }
       }
 
       <form class="card" (submit)="submit(); $event.preventDefault()">
@@ -55,7 +73,9 @@ import { ContributionsService } from '../../core/services/contributions.service'
     .contribute-grid { grid-template-columns: 320px 1fr; align-items: start; }
     @media (max-width: 720px) { .contribute-grid { grid-template-columns: 1fr; } }
     .upi-card { text-align: center; }
+    .qr-image { width: 180px; height: 180px; margin: var(--space-4) auto; display: block; border-radius: var(--radius-sm); }
     .vpa { font-weight: 700; font-size: 1.1rem; color: var(--fg); }
+    .security-note { font-size: 0.78rem; text-align: left; margin-top: var(--space-4); margin-bottom: 0; }
     .anon-check { font-weight: 500; color: var(--fg-muted); margin-bottom: var(--space-4); }
     .anon-check input { width: auto; }
   `,
@@ -63,6 +83,8 @@ import { ContributionsService } from '../../core/services/contributions.service'
 export class ContributeComponent {
   private contributionsApi = inject(ContributionsService);
   protected readonly upi = signal<{ link: string; vpa: string; payeeName: string } | null>(null);
+  protected readonly upiChecked = signal(false);
+  protected readonly qrDataUrl = signal<string | null>(null);
   protected readonly submitted = signal(false);
 
   protected amount: number | null = null;
@@ -72,7 +94,25 @@ export class ContributeComponent {
   protected anonymous = false;
 
   constructor() {
-    this.contributionsApi.getUpiLink().subscribe({ next: (u) => this.upi.set(u), error: () => {} });
+    this.contributionsApi.getUpiLink().subscribe({
+      next: (res) => {
+        this.upiChecked.set(true);
+        if (res.configured && res.link && res.vpa) {
+          this.upi.set({ link: res.link, vpa: res.vpa, payeeName: res.payeeName });
+          this.generateQr(res.link);
+        }
+      },
+      error: () => this.upiChecked.set(true),
+    });
+  }
+
+  /** Generated entirely client-side (no third-party QR API) so the UPI link/VPA never leaves the
+   *  browser just to render a code — it only ever encodes what's already shown as plain text. */
+  private generateQr(link: string): void {
+    import('qrcode')
+      .then((QRCode) => QRCode.toDataURL(link, { margin: 1, width: 200 }))
+      .then((dataUrl) => this.qrDataUrl.set(dataUrl))
+      .catch(() => this.qrDataUrl.set(null));
   }
 
   submit(): void {
