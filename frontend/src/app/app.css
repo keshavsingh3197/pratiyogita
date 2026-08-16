@@ -1,11 +1,82 @@
-.site-header nav {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid #ddd;
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 
-main {
-  padding: 1.5rem;
+.header-row {
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--fg);
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand-600);
+  color: #fff;
+  font-weight: 800;
+}
+
+.nav-links {
+  gap: var(--space-6);
+  flex: 1;
+  margin-left: var(--space-8);
+}
+
+.nav-links a {
+  color: var(--fg-muted);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--brand-600);
+  text-decoration: none;
+}
+
+.header-actions {
+  gap: var(--space-3);
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: var(--space-6) 0;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.site-footer .row {
+  justify-content: space-between;
+}
+
+@media (max-width: 720px) {
+  .header-row {
+    flex-wrap: wrap;
+  }
+
+  .nav-links {
+    margin-left: 0;
+    order: 3;
+    width: 100%;
+    gap: var(--space-4);
+  }
 }

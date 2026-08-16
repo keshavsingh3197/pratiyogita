@@ -8,16 +8,33 @@ import { SchoolsService } from '../../core/services/schools.service';
   template: `
     <h1>Register a school</h1>
     <p>Submitted schools are reviewed by an admin before they appear publicly or can enter competitions.</p>
-    <form (submit)="submit(); $event.preventDefault()">
-      <label>School name <input [(ngModel)]="name" name="name" required /></label>
-      <label>Contact email <input type="email" [(ngModel)]="contactEmail" name="contactEmail" required /></label>
-      <label>Contact phone <input [(ngModel)]="contactPhone" name="contactPhone" /></label>
-      <label>Address <input [(ngModel)]="address" name="address" /></label>
-      <button type="submit">Submit for approval</button>
+
+    <form class="card form-card" (submit)="submit(); $event.preventDefault()">
+      <div class="field">
+        <label for="name">School name</label>
+        <input id="name" [(ngModel)]="name" name="name" required />
+      </div>
+      <div class="field">
+        <label for="contactEmail">Contact email</label>
+        <input id="contactEmail" type="email" [(ngModel)]="contactEmail" name="contactEmail" required />
+      </div>
+      <div class="field">
+        <label for="contactPhone">Contact phone</label>
+        <input id="contactPhone" [(ngModel)]="contactPhone" name="contactPhone" />
+      </div>
+      <div class="field">
+        <label for="address">Address</label>
+        <input id="address" [(ngModel)]="address" name="address" />
+      </div>
+      <button type="submit" class="btn btn-primary">Submit for approval</button>
+
+      @if (submitted()) {
+        <p class="notice">Thanks — your school has been submitted and is pending admin approval.</p>
+      }
     </form>
-    @if (submitted()) {
-      <p>Thanks — your school has been submitted and is pending admin approval.</p>
-    }
+  `,
+  styles: `
+    .form-card { max-width: 480px; }
   `,
 })
 export class RegisterSchoolComponent {

@@ -1,19 +1,35 @@
 <header class="site-header">
-  <nav>
-    <a routerLink="/">Pratiyogita</a>
-    <a routerLink="/competitions">Competitions &amp; Tournaments</a>
-    <a routerLink="/leaderboard">Leaderboard</a>
-    <a routerLink="/news">News</a>
-    <a routerLink="/contribute">Contribute</a>
-    @if (auth.isAuthenticated()) {
-      <a routerLink="/register-school">Register school</a>
-      <button type="button" (click)="logout()">Sign out</button>
-    } @else {
-      <button type="button" (click)="login()">Sign in</button>
-    }
-  </nav>
+  <div class="container row header-row">
+    <a routerLink="/" class="brand">
+      <span class="brand-mark">P</span>
+      <span class="brand-name">Pratiyogita</span>
+    </a>
+
+    <nav class="row nav-links">
+      <a routerLink="/competitions" routerLinkActive="active">Competitions</a>
+      <a routerLink="/leaderboard" routerLinkActive="active">Leaderboard</a>
+      <a routerLink="/news" routerLinkActive="active">News</a>
+      <a routerLink="/contribute" routerLinkActive="active">Contribute</a>
+    </nav>
+
+    <div class="row header-actions">
+      @if (auth.isAuthenticated()) {
+        <a routerLink="/register-school" class="btn btn-outline">Register school</a>
+        <button type="button" class="btn btn-outline" (click)="logout()">Sign out</button>
+      } @else {
+        <button type="button" class="btn btn-primary" (click)="login()">Sign in</button>
+      }
+    </div>
+  </div>
 </header>
 
-<main>
+<main class="container page">
   <router-outlet />
 </main>
+
+<footer class="site-footer">
+  <div class="container row">
+    <span>&copy; {{ year }} Pratiyogita &middot; part of the keshavsingh.in family</span>
+    <a routerLink="/contribute">Support this platform</a>
+  </div>
+</footer>

@@ -8,27 +8,56 @@ import { ContributionsService } from '../../core/services/contributions.service'
   template: `
     <h1>Contribute</h1>
     <p>
-      Pay any amount to the UPI ID below using Google Pay, PhonePe, Paytm or any UPI app, then
-      paste the reference number below so we can record and verify your contribution.
+      Pay any amount via Google Pay, PhonePe, Paytm or any UPI app, then paste the reference number
+      below so we can record and verify your contribution.
     </p>
 
-    @if (upi(); as u) {
-      <p><strong>UPI ID:</strong> {{ u.vpa }} ({{ u.payeeName }})</p>
-      <a [href]="u.link">Open in a UPI app</a>
-    }
+    <div class="grid contribute-grid">
+      @if (upi(); as u) {
+        <div class="card upi-card">
+          <span class="badge">Pay via UPI</span>
+          <h3>{{ u.payeeName }}</h3>
+          <p class="vpa">{{ u.vpa }}</p>
+          <a [href]="u.link" class="btn btn-accent">Open in a UPI app</a>
+        </div>
+      }
 
-    <form (submit)="submit(); $event.preventDefault()">
-      <label>Amount (₹) <input type="number" [(ngModel)]="amount" name="amount" required /></label>
-      <label>Name <input [(ngModel)]="name" name="name" [disabled]="anonymous" /></label>
-      <label>Email <input [(ngModel)]="email" name="email" /></label>
-      <label>UPI reference no. <input [(ngModel)]="transactionRef" name="transactionRef" required /></label>
-      <label><input type="checkbox" [(ngModel)]="anonymous" name="anonymous" /> Contribute anonymously</label>
-      <button type="submit">Submit</button>
-    </form>
+      <form class="card" (submit)="submit(); $event.preventDefault()">
+        <div class="field">
+          <label for="amount">Amount (₹)</label>
+          <input id="amount" type="number" [(ngModel)]="amount" name="amount" required min="1" />
+        </div>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" [(ngModel)]="name" name="name" [disabled]="anonymous" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" [(ngModel)]="email" name="email" />
+        </div>
+        <div class="field">
+          <label for="ref">UPI reference no.</label>
+          <input id="ref" [(ngModel)]="transactionRef" name="transactionRef" required />
+          <small>Shown in your UPI app right after paying.</small>
+        </div>
+        <label class="row anon-check">
+          <input type="checkbox" [(ngModel)]="anonymous" name="anonymous" /> Contribute anonymously
+        </label>
+        <button type="submit" class="btn btn-primary">Submit</button>
 
-    @if (submitted()) {
-      <p>Thanks! Your contribution is recorded and pending verification.</p>
-    }
+        @if (submitted()) {
+          <p class="notice">Thanks! Your contribution is recorded and pending verification.</p>
+        }
+      </form>
+    </div>
+  `,
+  styles: `
+    .contribute-grid { grid-template-columns: 320px 1fr; align-items: start; }
+    @media (max-width: 720px) { .contribute-grid { grid-template-columns: 1fr; } }
+    .upi-card { text-align: center; }
+    .vpa { font-weight: 700; font-size: 1.1rem; color: var(--fg); }
+    .anon-check { font-weight: 500; color: var(--fg-muted); margin-bottom: var(--space-4); }
+    .anon-check input { width: auto; }
   `,
 })
 export class ContributeComponent {
