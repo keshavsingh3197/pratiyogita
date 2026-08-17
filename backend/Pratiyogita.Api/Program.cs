@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using KeshavSingh.Security;
+using KeshavSingh.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +18,9 @@ if (!string.IsNullOrWhiteSpace(port))
 
 // ---- Data (one Mongo collection per bounded context — see README.md for the module map) ----
 builder.Services.AddKeshavMongo(builder.Configuration);
+// Uploaded UPI QR image storage. Defaults to local disk; set Storage:Provider=S3 + Storage:S3:*
+// (Cloudflare R2 — same package/settings shape as admin's) to move it to R2 instead.
+builder.Services.AddKeshavStorage(builder.Configuration);
 builder.Services.AddSingleton<LocationService>();
 builder.Services.AddSingleton<SchoolService>();
 builder.Services.AddSingleton<StudentProfileService>();
@@ -27,6 +31,7 @@ builder.Services.AddSingleton<FixtureService>();
 builder.Services.AddSingleton<ResultService>();
 builder.Services.AddSingleton<LeaderboardService>();
 builder.Services.AddSingleton<ContributionService>();
+builder.Services.AddSingleton<ContributionItemService>();
 builder.Services.AddSingleton<NewsService>();
 builder.Services.AddSingleton<PlatformSettingsService>();
 
@@ -137,6 +142,7 @@ await app.Services.GetRequiredService<RegistrationService>().EnsureIndexesAsync(
 await app.Services.GetRequiredService<FixtureService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<ResultService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<ContributionService>().EnsureIndexesAsync();
+await app.Services.GetRequiredService<ContributionItemService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<NewsService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<PlatformSettingsService>().InitAsync();
 

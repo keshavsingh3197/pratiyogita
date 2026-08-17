@@ -75,6 +75,15 @@ export interface PaymentSettings {
   configured: boolean;
   upiVpa?: string | null;
   payeeName: string;
+  hasUploadedQr: boolean;
+}
+
+export interface ContributionItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  amount: number;
+  isActive: boolean;
 }
 
 export interface StudentProfile {
