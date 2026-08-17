@@ -21,6 +21,14 @@ public class PlatformSettings
     [BsonElement("payeeName")]
     public string PayeeName { get; set; } = "Pratiyogita";
 
+    /// <summary>Object-store key of an admin-uploaded QR image (e.g. a bank-issued UPI QR), if any —
+    /// shown on the Contribute page instead of the client-generated one when present.</summary>
+    [BsonElement("uploadedQrObjectKey")]
+    public string? UploadedQrObjectKey { get; set; }
+
+    [BsonElement("uploadedQrContentType")]
+    public string? UploadedQrContentType { get; set; }
+
     [BsonElement("lastUpdatedByUserId")]
     public string? LastUpdatedByUserId { get; set; }
 

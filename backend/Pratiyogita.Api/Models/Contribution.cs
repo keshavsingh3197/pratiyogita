@@ -50,6 +50,11 @@ public class Contribution
     [BsonElement("transactionRef")]
     public string? TransactionRef { get; set; }
 
+    /// <summary>What was "added to cart" (e.g. "Sponsor a trophy x2") — record-keeping only; the
+    /// total charged is still just <see cref="Amount"/>, there is no per-item settlement.</summary>
+    [BsonElement("items")]
+    public List<string> Items { get; set; } = new();
+
     [BsonElement("message")]
     public string? Message { get; set; }
 

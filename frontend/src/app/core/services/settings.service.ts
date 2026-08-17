@@ -17,4 +17,20 @@ export class SettingsService {
   updatePayments(req: { upiVpa: string; payeeName: string }) {
     return this.http.put<PaymentSettings>(`${this.base}/payments`, req);
   }
+
+  /** Absolute URL for the admin-uploaded QR image (public endpoint) — bust the cache on re-upload
+   *  by appending a timestamp, since the object key/URL itself doesn't change per upload. */
+  qrImageUrl(): string {
+    return `${this.base}/payments/qr-image?t=${Date.now()}`;
+  }
+
+  uploadQrImage(file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<PaymentSettings>(`${this.base}/payments/qr-image`, form);
+  }
+
+  deleteQrImage() {
+    return this.http.delete<void>(`${this.base}/payments/qr-image`);
+  }
 }

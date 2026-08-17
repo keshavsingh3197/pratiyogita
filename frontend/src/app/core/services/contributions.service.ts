@@ -17,10 +17,13 @@ export class ContributionsService {
     const params: Record<string, string> = {};
     if (amount) params['amount'] = String(amount);
     if (note) params['note'] = note;
-    return this.http.get<{ configured: boolean; link: string | null; vpa: string | null; payeeName: string }>(
-      `${this.base}/upi-link`,
-      { params }
-    );
+    return this.http.get<{
+      configured: boolean;
+      link: string | null;
+      vpa: string | null;
+      payeeName: string;
+      hasUploadedQr: boolean;
+    }>(`${this.base}/upi-link`, { params });
   }
 
   submit(req: {
@@ -33,6 +36,7 @@ export class ContributionsService {
     transactionRef?: string;
     message?: string;
     isAnonymous: boolean;
+    items?: string[];
   }) {
     return this.http.post(this.base, req);
   }
