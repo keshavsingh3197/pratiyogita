@@ -106,8 +106,69 @@ public sealed class PlatformSettingsService
             .Set(x => x.LastUpdatedByUserId, adminUserId)
             .Set(x => x.LastUpdatedAt, DateTime.UtcNow);
 
+        if (req.Ads is not null)
+        {
+            update = update.Set(x => x.Ads, SanitizeAdConfig(req.Ads));
+        }
+
         await _settings.UpdateOneAsync(x => x.Id == PlatformSettings.DocumentId, update,
             new UpdateOptions { IsUpsert = true }, ct);
         return await GetAsync(ct);
+    }
+
+    public static Pratiyogita.Api.Dtos.AdMonetizationDto ToAdDto(AdMonetizationConfig? src)
+    {
+        src ??= new AdMonetizationConfig();
+        return new Pratiyogita.Api.Dtos.AdMonetizationDto(
+            src.AdsEnabled,
+            src.AdSenseClientId,
+            src.HeaderAdSlotId,
+            src.InFeedAdSlotId,
+            src.SidebarAdSlotId,
+            src.FooterAdSlotId,
+            string.IsNullOrWhiteSpace(src.AdLabel) ? "Advertisement" : src.AdLabel,
+            src.SponsorBannerEnabled,
+            string.IsNullOrWhiteSpace(src.SponsorBadge) ? "Featured" : src.SponsorBadge,
+            src.SponsorTitle,
+            src.SponsorDescription,
+            string.IsNullOrWhiteSpace(src.SponsorCtaText) ? "Learn More" : src.SponsorCtaText,
+            src.SponsorUrl);
+    }
+
+    private static AdMonetizationConfig SanitizeAdConfig(Pratiyogita.Api.Dtos.AdMonetizationDto input)
+    {
+        var clientId = (input.AdSenseClientId ?? string.Empty).Trim();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(clientId, @"^ca-pub-\d{10,20}$"))
+            clientId = string.Empty;
+
+        static string CleanSlot(string? raw)
+        {
+            var s = (raw ?? string.Empty).Trim();
+            return System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d{6,15}$") ? s : string.Empty;
+        }
+
+        var sponsorUrl = (input.SponsorUrl ?? string.Empty).Trim();
+        if (!Uri.TryCreate(sponsorUrl, UriKind.Absolute, out var parsed) ||
+            (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+        {
+            sponsorUrl = string.Empty;
+        }
+
+        return new AdMonetizationConfig
+        {
+            AdsEnabled = input.AdsEnabled && !string.IsNullOrEmpty(clientId),
+            AdSenseClientId = clientId,
+            HeaderAdSlotId = CleanSlot(input.HeaderAdSlotId),
+            InFeedAdSlotId = CleanSlot(input.InFeedAdSlotId),
+            SidebarAdSlotId = CleanSlot(input.SidebarAdSlotId),
+            FooterAdSlotId = CleanSlot(input.FooterAdSlotId),
+            AdLabel = string.IsNullOrWhiteSpace(input.AdLabel) ? "Advertisement" : input.AdLabel.Trim(),
+            SponsorBannerEnabled = input.SponsorBannerEnabled && !string.IsNullOrEmpty(sponsorUrl),
+            SponsorBadge = string.IsNullOrWhiteSpace(input.SponsorBadge) ? "Featured" : input.SponsorBadge.Trim(),
+            SponsorTitle = (input.SponsorTitle ?? string.Empty).Trim(),
+            SponsorDescription = (input.SponsorDescription ?? string.Empty).Trim(),
+            SponsorCtaText = string.IsNullOrWhiteSpace(input.SponsorCtaText) ? "Learn More" : input.SponsorCtaText.Trim(),
+            SponsorUrl = sponsorUrl
+        };
     }
 }

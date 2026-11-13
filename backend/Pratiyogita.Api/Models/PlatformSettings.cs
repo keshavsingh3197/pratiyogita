@@ -55,4 +55,49 @@ public class PlatformSettings
 
     [BsonElement("showEcosystemBar")]
     public bool ShowEcosystemBar { get; set; } = true;
+
+    [BsonElement("ads")]
+    public AdMonetizationConfig Ads { get; set; } = new();
+}
+
+public class AdMonetizationConfig
+{
+    [BsonElement("adsEnabled")]
+    public bool AdsEnabled { get; set; }
+
+    [BsonElement("adSenseClientId")]
+    public string AdSenseClientId { get; set; } = string.Empty;
+
+    [BsonElement("headerAdSlotId")]
+    public string HeaderAdSlotId { get; set; } = string.Empty;
+
+    [BsonElement("inFeedAdSlotId")]
+    public string InFeedAdSlotId { get; set; } = string.Empty;
+
+    [BsonElement("sidebarAdSlotId")]
+    public string SidebarAdSlotId { get; set; } = string.Empty;
+
+    [BsonElement("footerAdSlotId")]
+    public string FooterAdSlotId { get; set; } = string.Empty;
+
+    [BsonElement("adLabel")]
+    public string AdLabel { get; set; } = "Advertisement";
+
+    [BsonElement("sponsorBannerEnabled")]
+    public bool SponsorBannerEnabled { get; set; }
+
+    [BsonElement("sponsorBadge")]
+    public string SponsorBadge { get; set; } = "Featured";
+
+    [BsonElement("sponsorTitle")]
+    public string SponsorTitle { get; set; } = string.Empty;
+
+    [BsonElement("sponsorDescription")]
+    public string SponsorDescription { get; set; } = string.Empty;
+
+    [BsonElement("sponsorCtaText")]
+    public string SponsorCtaText { get; set; } = "Learn More";
+
+    [BsonElement("sponsorUrl")]
+    public string SponsorUrl { get; set; } = string.Empty;
 }

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { PaymentSettings } from '../models/domain.models';
-import { BrandingSettings } from './ecosystem-config.service';
+import { AdMonetizationConfig, BrandingSettings } from './ecosystem-config.service';
 
 export interface UpdateBrandingSettingsRequest {
   siteName: string;
@@ -12,6 +12,7 @@ export interface UpdateBrandingSettingsRequest {
   heroSubtitle: string;
   centralConfigUrl: string;
   showEcosystemBar: boolean;
+  ads?: AdMonetizationConfig;
 }
 
 /** Runtime, DB-backed platform settings — currently just Payments. Reads are public; updates are

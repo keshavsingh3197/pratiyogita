@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { LocationsService } from '../../core/services/locations.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { SettingsService } from '../../core/services/settings.service';
-import { EcosystemConfigService } from '../../core/services/ecosystem-config.service';
+import { AdMonetizationConfig, EcosystemConfigService } from '../../core/services/ecosystem-config.service';
 import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from '../../core/models/domain.models';
 
 @Component({
@@ -47,6 +47,46 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
               <input type="checkbox" [(ngModel)]="showEcosystemBar" name="showEcosystemBar" />
               Show Top Ecosystem Switcher Bar
             </label>
+          </div>
+          <div class="field full-span">
+            <hr />
+            <strong>Google AdSense &amp; Sponsor Monetization (Runtime Config)</strong>
+          </div>
+          <div class="field checkbox-row full-span">
+            <label>
+              <input type="checkbox" [(ngModel)]="adsForm.adsEnabled" name="adsEnabled" />
+              Enable Google AdSense Slots
+            </label>
+          </div>
+          <div class="field">
+            <label for="adClientId">AdSense Client ID (ca-pub-...)</label>
+            <input id="adClientId" [(ngModel)]="adsForm.adSenseClientId" name="adClientId" placeholder="ca-pub-0000000000000000" />
+          </div>
+          <div class="field">
+            <label for="adLabel">Ad Container Label</label>
+            <input id="adLabel" [(ngModel)]="adsForm.adLabel" name="adLabel" placeholder="Advertisement" />
+          </div>
+          <div class="field">
+            <label for="inFeedSlot">In-Feed Ad Slot ID</label>
+            <input id="inFeedSlot" [(ngModel)]="adsForm.inFeedAdSlotId" name="inFeedSlot" placeholder="10-digit slot ID" />
+          </div>
+          <div class="field">
+            <label for="footerSlot">Footer Ad Slot ID</label>
+            <input id="footerSlot" [(ngModel)]="adsForm.footerAdSlotId" name="footerSlot" placeholder="10-digit slot ID" />
+          </div>
+          <div class="field checkbox-row full-span">
+            <label>
+              <input type="checkbox" [(ngModel)]="adsForm.sponsorBannerEnabled" name="sponsorEnabled" />
+              Enable Sponsor Banner Fallback
+            </label>
+          </div>
+          <div class="field">
+            <label for="sponsorTitle">Sponsor Title</label>
+            <input id="sponsorTitle" [(ngModel)]="adsForm.sponsorTitle" name="sponsorTitle" placeholder="Study Kits / Sponsor" />
+          </div>
+          <div class="field">
+            <label for="sponsorUrl">Sponsor URL (https://)</label>
+            <input id="sponsorUrl" [(ngModel)]="adsForm.sponsorUrl" name="sponsorUrl" placeholder="https://..." />
           </div>
         </div>
         <div class="row action-row">
@@ -184,6 +224,7 @@ export class MasterDataComponent {
   protected heroSubtitle = '';
   protected centralConfigUrl = '';
   protected showEcosystemBar = true;
+  protected adsForm: AdMonetizationConfig = this.emptyAds();
 
   constructor() {
     this.reloadLocations();
@@ -200,6 +241,7 @@ export class MasterDataComponent {
       this.heroSubtitle = b.heroSubtitle || '';
       this.centralConfigUrl = b.centralConfigUrl || '';
       this.showEcosystemBar = b.showEcosystemBar ?? true;
+      this.adsForm = { ...this.emptyAds(), ...(b.ads || {}) };
     });
   }
 
@@ -214,11 +256,30 @@ export class MasterDataComponent {
         heroSubtitle: this.heroSubtitle,
         centralConfigUrl: this.centralConfigUrl,
         showEcosystemBar: this.showEcosystemBar,
+        ads: { ...this.adsForm },
       })
       .subscribe(() => {
         this.ecosystem.refresh();
         this.brandingSaved.set(true);
       });
+  }
+
+  private emptyAds(): AdMonetizationConfig {
+    return {
+      adsEnabled: false,
+      adSenseClientId: '',
+      headerAdSlotId: '',
+      inFeedAdSlotId: '',
+      sidebarAdSlotId: '',
+      footerAdSlotId: '',
+      adLabel: 'Advertisement',
+      sponsorBannerEnabled: false,
+      sponsorBadge: 'Featured',
+      sponsorTitle: '',
+      sponsorDescription: '',
+      sponsorCtaText: 'Learn More',
+      sponsorUrl: ''
+    };
   }
 
   addLocation(): void {
