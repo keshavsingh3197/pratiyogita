@@ -28,7 +28,9 @@ public sealed record BrandingSettingsDto(
     string CentralConfigUrl,
     bool ShowEcosystemBar,
     DateTime? LastUpdatedAt,
-    AdMonetizationDto? Ads = null);
+    AdMonetizationDto? Ads = null,
+    bool CentralAdSenseConfigured = false,
+    string CentralAdSenseClientId = "");
 
 public sealed record UpdateBrandingSettingsRequest(
     string SiteName,

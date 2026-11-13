@@ -52,6 +52,8 @@ export interface BrandingSettings {
   centralConfigUrl: string;
   showEcosystemBar: boolean;
   ads?: AdMonetizationConfig | null;
+  centralAdSenseConfigured?: boolean;
+  centralAdSenseClientId?: string;
   lastUpdatedAt?: string | null;
 }
 

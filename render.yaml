@@ -12,6 +12,10 @@ services:
         sync: false
       - key: Mongo__Database
         value: PratiyogitaDb
+      - key: CentralMongo__ConnectionString
+        sync: false
+      - key: CentralMongo__DatabaseName
+        value: AdminDb
       - key: AllowedOrigins__0
         value: https://pratiyogita.keshavsingh.in
       - key: AllowedOrigins__1

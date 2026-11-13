@@ -33,6 +33,7 @@ builder.Services.AddSingleton<LeaderboardService>();
 builder.Services.AddSingleton<ContributionService>();
 builder.Services.AddSingleton<ContributionItemService>();
 builder.Services.AddSingleton<NewsService>();
+builder.Services.AddSingleton<CentralAdminConfigReader>();
 builder.Services.AddSingleton<PlatformSettingsService>();
 
 builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection(PaymentOptions.Section));
