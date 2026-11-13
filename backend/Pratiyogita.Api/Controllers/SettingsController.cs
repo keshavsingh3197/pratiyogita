@@ -90,7 +90,8 @@ public class SettingsController : ControllerBase
             s.HeroSubtitle,
             string.IsNullOrWhiteSpace(s.CentralConfigUrl) ? "https://id.keshavsingh.in/api/config" : s.CentralConfigUrl,
             s.ShowEcosystemBar,
-            s.LastUpdatedAt));
+            s.LastUpdatedAt,
+            PlatformSettingsService.ToAdDto(s.Ads)));
     }
 
     [HttpPut("branding")]
@@ -106,6 +107,7 @@ public class SettingsController : ControllerBase
             s.HeroSubtitle,
             s.CentralConfigUrl,
             s.ShowEcosystemBar,
-            s.LastUpdatedAt));
+            s.LastUpdatedAt,
+            PlatformSettingsService.ToAdDto(s.Ads)));
     }
 }

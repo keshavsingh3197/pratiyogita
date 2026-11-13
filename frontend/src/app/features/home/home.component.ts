@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EcosystemConfigService } from '../../core/services/ecosystem-config.service';
+import { AdSlotComponent } from '../shared/ad-slot/ad-slot.component';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink],
+  imports: [RouterLink, AdSlotComponent],
   template: `
     <section class="hero">
       <span class="badge">{{ ecosystem.heroBadge() }}</span>
@@ -47,6 +48,8 @@ import { EcosystemConfigService } from '../../core/services/ecosystem-config.ser
         <p>Support via UPI — Google Pay, PhonePe, Paytm and more.</p>
       </a>
     </section>
+
+    <app-ad-slot placement="infeed" />
   `,
   styles: `
     .hero {

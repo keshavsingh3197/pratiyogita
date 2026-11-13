@@ -4,6 +4,21 @@ public sealed record UpdatePaymentSettingsRequest(string UpiVpa, string PayeeNam
 
 public sealed record PaymentSettingsDto(bool Configured, string? UpiVpa, string PayeeName, bool HasUploadedQr);
 
+public sealed record AdMonetizationDto(
+    bool AdsEnabled,
+    string AdSenseClientId,
+    string HeaderAdSlotId,
+    string InFeedAdSlotId,
+    string SidebarAdSlotId,
+    string FooterAdSlotId,
+    string AdLabel,
+    bool SponsorBannerEnabled,
+    string SponsorBadge,
+    string SponsorTitle,
+    string SponsorDescription,
+    string SponsorCtaText,
+    string SponsorUrl);
+
 public sealed record BrandingSettingsDto(
     string SiteName,
     string Tagline,
@@ -12,7 +27,8 @@ public sealed record BrandingSettingsDto(
     string HeroSubtitle,
     string CentralConfigUrl,
     bool ShowEcosystemBar,
-    DateTime? LastUpdatedAt);
+    DateTime? LastUpdatedAt,
+    AdMonetizationDto? Ads = null);
 
 public sealed record UpdateBrandingSettingsRequest(
     string SiteName,
@@ -21,4 +37,5 @@ public sealed record UpdateBrandingSettingsRequest(
     string HeroTitle,
     string HeroSubtitle,
     string? CentralConfigUrl,
-    bool ShowEcosystemBar);
+    bool ShowEcosystemBar,
+    AdMonetizationDto? Ads = null);

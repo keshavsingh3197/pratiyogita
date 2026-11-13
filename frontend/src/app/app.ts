@@ -3,10 +3,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
 import { EcosystemConfigService } from './core/services/ecosystem-config.service';
+import { AdSlotComponent } from './features/shared/ad-slot/ad-slot.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AdSlotComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

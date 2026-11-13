@@ -27,6 +27,22 @@ export interface CentralChannelItem {
   sortOrder: number;
 }
 
+export interface AdMonetizationConfig {
+  adsEnabled: boolean;
+  adSenseClientId: string;
+  headerAdSlotId: string;
+  inFeedAdSlotId: string;
+  sidebarAdSlotId: string;
+  footerAdSlotId: string;
+  adLabel: string;
+  sponsorBannerEnabled: boolean;
+  sponsorBadge: string;
+  sponsorTitle: string;
+  sponsorDescription: string;
+  sponsorCtaText: string;
+  sponsorUrl: string;
+}
+
 export interface BrandingSettings {
   siteName: string;
   tagline: string;
@@ -35,6 +51,7 @@ export interface BrandingSettings {
   heroSubtitle: string;
   centralConfigUrl: string;
   showEcosystemBar: boolean;
+  ads?: AdMonetizationConfig | null;
   lastUpdatedAt?: string | null;
 }
 
