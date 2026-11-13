@@ -5,6 +5,7 @@ import { ThemeService } from '../../core/services/theme.service';
 import { LocaleService, SUPPORTED_LANGUAGES } from '../../core/services/locale.service';
 import { StudentProfileService } from '../../core/services/student-profile.service';
 import { SchoolsService } from '../../core/services/schools.service';
+import { EcosystemConfigService } from '../../core/services/ecosystem-config.service';
 import { School, StudentProfile } from '../../core/models/domain.models';
 
 @Component({
@@ -16,7 +17,10 @@ import { School, StudentProfile } from '../../core/models/domain.models';
     <div class="stack settings-sections">
       <section class="card">
         <h2>My details</h2>
-        <p>Your account (name, email, sign-in) is managed centrally at your keshavsingh.in account.</p>
+        <p>
+          Your account (name, email, sign-in) is managed centrally in your
+          <a [href]="ecosystem.adminPortalUrl()" target="_blank" rel="noopener">SSO Identity Portal</a>.
+        </p>
         @if (auth.user(); as u) {
           <dl class="details-grid">
             <dt>Name</dt><dd>{{ u.displayName }}</dd>
@@ -106,6 +110,7 @@ export class SettingsComponent {
   protected readonly auth = inject(AuthService);
   protected readonly theme = inject(ThemeService);
   protected readonly locale = inject(LocaleService);
+  protected readonly ecosystem = inject(EcosystemConfigService);
   private profileApi = inject(StudentProfileService);
   private schoolsApi = inject(SchoolsService);
 

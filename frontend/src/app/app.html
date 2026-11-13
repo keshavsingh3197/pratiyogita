@@ -1,8 +1,29 @@
+@if (ecosystem.showEcosystemBar() && ecosystem.ecosystemBarSites().length > 0) {
+  <nav class="ecosystem-strip" aria-label="Ecosystem Navigation">
+    <div class="container eco-row">
+      <span class="eco-label">{{ ecosystem.creatorName() }}:</span>
+      <div class="eco-links">
+        @for (site of ecosystem.ecosystemBarSites(); track site.key) {
+          <a
+            [href]="site.url"
+            [attr.target]="site.key === 'pratiyogita' ? null : '_blank'"
+            [attr.rel]="site.key === 'pratiyogita' ? null : 'noopener'"
+            class="eco-pill"
+            [class.active]="site.key === 'pratiyogita'">
+            <span>{{ site.icon || '🌐' }}</span>
+            <span>{{ site.name }}</span>
+          </a>
+        }
+      </div>
+    </div>
+  </nav>
+}
+
 <header class="site-header">
   <div class="container row header-row">
     <a routerLink="/" class="brand">
-      <span class="brand-mark">P</span>
-      <span class="brand-name">Pratiyogita</span>
+      <span class="brand-mark">{{ ecosystem.siteName().charAt(0) || 'P' }}</span>
+      <span class="brand-name">{{ ecosystem.siteName() }}</span>
     </a>
 
     <nav class="row nav-links">
@@ -33,7 +54,21 @@
 
 <footer class="site-footer">
   <div class="container footer-row">
-    <span>&copy; {{ year }} Pratiyogita &middot; part of the keshavsingh.in family</span>
-    <a routerLink="/contribute">Support this platform</a>
+    <div class="footer-brand">
+      <strong>{{ ecosystem.siteName() }}</strong>
+      <span>&middot; {{ ecosystem.copyrightNotice() || ('© ' + year + ' ' + ecosystem.creatorName()) }}</span>
+    </div>
+
+    <div class="footer-links">
+      <a routerLink="/contribute">Support platform</a>
+      @for (site of ecosystem.footerSites(); track site.key) {
+        @if (site.key !== 'pratiyogita') {
+          <a [href]="site.url" target="_blank" rel="noopener">{{ site.shortLabel || site.name }}</a>
+        }
+      }
+      @for (ch of ecosystem.footerChannels(); track ch.id || ch.key) {
+        <a [href]="ch.url" target="_blank" rel="noopener">📺 {{ ch.handle || ch.name }}</a>
+      }
+    </div>
   </div>
 </footer>

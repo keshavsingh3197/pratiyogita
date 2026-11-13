@@ -34,4 +34,25 @@ public class PlatformSettings
 
     [BsonElement("lastUpdatedAt")]
     public DateTime? LastUpdatedAt { get; set; }
+
+    [BsonElement("siteName")]
+    public string SiteName { get; set; } = "Pratiyogita";
+
+    [BsonElement("tagline")]
+    public string Tagline { get; set; } = "School exams, academic olympiads & sports tournaments platform.";
+
+    [BsonElement("heroBadge")]
+    public string HeroBadge { get; set; } = "School exams · Olympiads · Sports tournaments";
+
+    [BsonElement("heroTitle")]
+    public string HeroTitle { get; set; } = "One place for every competition, every result, every topper.";
+
+    [BsonElement("heroSubtitle")]
+    public string HeroSubtitle { get; set; } = "Schedules, live registrations, published results and location/school-wise leaderboards — for academic exams and sports tournaments alike.";
+
+    [BsonElement("centralConfigUrl")]
+    public string CentralConfigUrl { get; set; } = "https://id.keshavsingh.in/api/config";
+
+    [BsonElement("showEcosystemBar")]
+    public bool ShowEcosystemBar { get; set; } = true;
 }

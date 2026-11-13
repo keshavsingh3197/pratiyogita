@@ -91,4 +91,23 @@ public sealed class PlatformSettingsService
     }
 
     public Task<Stream?> OpenUploadedQrAsync(string key, CancellationToken ct = default) => _store.OpenAsync(key, ct);
+
+    public async Task<PlatformSettings> UpdateBrandingAsync(
+        Pratiyogita.Api.Dtos.UpdateBrandingSettingsRequest req, string adminUserId, CancellationToken ct = default)
+    {
+        var update = Builders<PlatformSettings>.Update
+            .Set(x => x.SiteName, string.IsNullOrWhiteSpace(req.SiteName) ? "Pratiyogita" : req.SiteName.Trim())
+            .Set(x => x.Tagline, req.Tagline?.Trim() ?? string.Empty)
+            .Set(x => x.HeroBadge, req.HeroBadge?.Trim() ?? string.Empty)
+            .Set(x => x.HeroTitle, req.HeroTitle?.Trim() ?? string.Empty)
+            .Set(x => x.HeroSubtitle, req.HeroSubtitle?.Trim() ?? string.Empty)
+            .Set(x => x.CentralConfigUrl, string.IsNullOrWhiteSpace(req.CentralConfigUrl) ? "https://id.keshavsingh.in/api/config" : req.CentralConfigUrl.Trim())
+            .Set(x => x.ShowEcosystemBar, req.ShowEcosystemBar)
+            .Set(x => x.LastUpdatedByUserId, adminUserId)
+            .Set(x => x.LastUpdatedAt, DateTime.UtcNow);
+
+        await _settings.UpdateOneAsync(x => x.Id == PlatformSettings.DocumentId, update,
+            new UpdateOptions { IsUpsert = true }, ct);
+        return await GetAsync(ct);
+    }
 }
