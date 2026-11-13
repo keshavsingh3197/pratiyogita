@@ -15,12 +15,18 @@ public sealed class PlatformSettingsService
     private readonly IMongoCollection<PlatformSettings> _settings;
     private readonly IObjectStore _store;
     private readonly PaymentOptions _seedDefaults;
+    private readonly CentralAdminConfigReader? _centralReader;
 
-    public PlatformSettingsService(MongoDbService db, IObjectStore store, IOptions<PaymentOptions> seedDefaults)
+    public PlatformSettingsService(
+        MongoDbService db,
+        IObjectStore store,
+        IOptions<PaymentOptions> seedDefaults,
+        CentralAdminConfigReader? centralReader = null)
     {
         _settings = db.GetCollection<PlatformSettings>("platform_settings");
         _store = store;
         _seedDefaults = seedDefaults.Value;
+        _centralReader = centralReader;
     }
 
     public async Task InitAsync(CancellationToken ct = default)
@@ -108,7 +114,8 @@ public sealed class PlatformSettingsService
 
         if (req.Ads is not null)
         {
-            update = update.Set(x => x.Ads, SanitizeAdConfig(req.Ads));
+            var centralAdSenseId = await ResolveCentralAdSenseClientIdAsync(ct);
+            update = update.Set(x => x.Ads, SanitizeAdConfig(req.Ads, centralAdSenseId));
         }
 
         await _settings.UpdateOneAsync(x => x.Id == PlatformSettings.DocumentId, update,
@@ -116,12 +123,43 @@ public sealed class PlatformSettingsService
         return await GetAsync(ct);
     }
 
-    public static Pratiyogita.Api.Dtos.AdMonetizationDto ToAdDto(AdMonetizationConfig? src)
+    public async Task<string> ResolveCentralAdSenseClientIdAsync(CancellationToken ct = default)
+    {
+        if (_centralReader is null) return string.Empty;
+        var snap = await _centralReader.GetSnapshotAsync(ct);
+        var id = (snap.AdSenseClientId ?? string.Empty).Trim();
+        return System.Text.RegularExpressions.Regex.IsMatch(id, @"^ca-pub-\d{10,20}$") ? id : string.Empty;
+    }
+
+    public async Task<Pratiyogita.Api.Dtos.BrandingSettingsDto> ToBrandingDtoAsync(
+        PlatformSettings s, CancellationToken ct = default)
+    {
+        var centralId = await ResolveCentralAdSenseClientIdAsync(ct);
+        var adDto = ToAdDto(s.Ads, centralId);
+        return new Pratiyogita.Api.Dtos.BrandingSettingsDto(
+            string.IsNullOrWhiteSpace(s.SiteName) ? "Pratiyogita" : s.SiteName,
+            s.Tagline,
+            s.HeroBadge,
+            s.HeroTitle,
+            s.HeroSubtitle,
+            string.IsNullOrWhiteSpace(s.CentralConfigUrl) ? "https://id.keshavsingh.in/api/config" : s.CentralConfigUrl,
+            s.ShowEcosystemBar,
+            s.LastUpdatedAt,
+            adDto,
+            !string.IsNullOrEmpty(centralId),
+            centralId);
+    }
+
+    public static Pratiyogita.Api.Dtos.AdMonetizationDto ToAdDto(AdMonetizationConfig? src, string centralAdSenseClientId = "")
     {
         src ??= new AdMonetizationConfig();
+        var effectiveClientId = !string.IsNullOrEmpty(centralAdSenseClientId)
+            ? centralAdSenseClientId
+            : src.AdSenseClientId;
+
         return new Pratiyogita.Api.Dtos.AdMonetizationDto(
             src.AdsEnabled,
-            src.AdSenseClientId,
+            effectiveClientId,
             src.HeaderAdSlotId,
             src.InFeedAdSlotId,
             src.SidebarAdSlotId,
@@ -135,11 +173,18 @@ public sealed class PlatformSettingsService
             src.SponsorUrl);
     }
 
-    private static AdMonetizationConfig SanitizeAdConfig(Pratiyogita.Api.Dtos.AdMonetizationDto input)
+    public static AdMonetizationConfig SanitizeAdConfig(
+        Pratiyogita.Api.Dtos.AdMonetizationDto input, string centralAdSenseClientId = "")
     {
         var clientId = (input.AdSenseClientId ?? string.Empty).Trim();
         if (!System.Text.RegularExpressions.Regex.IsMatch(clientId, @"^ca-pub-\d{10,20}$"))
             clientId = string.Empty;
+
+        if (!string.IsNullOrEmpty(centralAdSenseClientId) &&
+            string.Equals(clientId, centralAdSenseClientId, StringComparison.OrdinalIgnoreCase))
+        {
+            clientId = string.Empty;
+        }
 
         static string CleanSlot(string? raw)
         {
@@ -154,9 +199,11 @@ public sealed class PlatformSettingsService
             sponsorUrl = string.Empty;
         }
 
+        var hasEffectiveClient = !string.IsNullOrEmpty(clientId) || !string.IsNullOrEmpty(centralAdSenseClientId);
+
         return new AdMonetizationConfig
         {
-            AdsEnabled = input.AdsEnabled && !string.IsNullOrEmpty(clientId),
+            AdsEnabled = input.AdsEnabled && hasEffectiveClient,
             AdSenseClientId = clientId,
             HeaderAdSlotId = CleanSlot(input.HeaderAdSlotId),
             InFeedAdSlotId = CleanSlot(input.InFeedAdSlotId),

@@ -59,8 +59,17 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
             </label>
           </div>
           <div class="field">
-            <label for="adClientId">AdSense Client ID (ca-pub-...)</label>
-            <input id="adClientId" [(ngModel)]="adsForm.adSenseClientId" name="adClientId" placeholder="ca-pub-0000000000000000" />
+            <label>AdSense Publisher ID (Central Admin)</label>
+            <div class="central-status-box">
+              @if (centralAdSenseClientId() || adsForm.adSenseClientId) {
+                <span class="status-pill ok">✓ {{ centralAdSenseClientId() || adsForm.adSenseClientId }}</span>
+              } @else {
+                <span class="status-pill muted">Not configured in Central Admin</span>
+              }
+              <a [href]="ecosystem.adminPortalUrl() + '/settings?tab=integrations'" target="_blank" rel="noopener" class="central-link">
+                Edit in Central Admin &rarr;
+              </a>
+            </div>
           </div>
           <div class="field">
             <label for="adLabel">Ad Container Label</label>
@@ -192,6 +201,11 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
     .checkbox-row label { display: flex; align-items: center; gap: 0.45rem; font-weight: 600; }
     .action-row { flex-wrap: wrap; gap: var(--space-3); }
     .meta-hint { margin-top: var(--space-3); font-size: 0.85rem; color: var(--fg-muted); }
+    .central-status-box { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem 0.65rem; border: 1px solid var(--border, #cbd5e1); border-radius: 6px; background: var(--surface-2, #f8fafc); font-size: 0.85rem; }
+    .status-pill.ok { color: #059669; font-weight: 600; }
+    .status-pill.muted { color: var(--fg-muted, #64748b); }
+    .central-link { color: var(--primary-600, #2563eb); font-weight: 600; text-decoration: none; font-size: 0.82rem; }
+    .central-link:hover { text-decoration: underline; }
     @media (max-width: 560px) { .payment-grid { grid-template-columns: 1fr; } }
   `,
 })
@@ -207,6 +221,7 @@ export class MasterDataComponent {
   protected readonly categoryError = signal<string | null>(null);
   protected readonly paymentsSaved = signal(false);
   protected readonly brandingSaved = signal(false);
+  protected readonly centralAdSenseClientId = signal('');
 
   protected newCity = '';
   protected newState = '';
@@ -241,6 +256,7 @@ export class MasterDataComponent {
       this.heroSubtitle = b.heroSubtitle || '';
       this.centralConfigUrl = b.centralConfigUrl || '';
       this.showEcosystemBar = b.showEcosystemBar ?? true;
+      this.centralAdSenseClientId.set(b.centralAdSenseClientId || '');
       this.adsForm = { ...this.emptyAds(), ...(b.ads || {}) };
     });
   }

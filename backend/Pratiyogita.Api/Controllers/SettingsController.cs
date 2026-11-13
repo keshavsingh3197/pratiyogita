@@ -82,16 +82,7 @@ public class SettingsController : ControllerBase
     public async Task<ActionResult<BrandingSettingsDto>> GetBranding()
     {
         var s = await _settings.GetAsync();
-        return Ok(new BrandingSettingsDto(
-            string.IsNullOrWhiteSpace(s.SiteName) ? "Pratiyogita" : s.SiteName,
-            s.Tagline,
-            s.HeroBadge,
-            s.HeroTitle,
-            s.HeroSubtitle,
-            string.IsNullOrWhiteSpace(s.CentralConfigUrl) ? "https://id.keshavsingh.in/api/config" : s.CentralConfigUrl,
-            s.ShowEcosystemBar,
-            s.LastUpdatedAt,
-            PlatformSettingsService.ToAdDto(s.Ads)));
+        return Ok(await _settings.ToBrandingDtoAsync(s));
     }
 
     [HttpPut("branding")]
@@ -99,15 +90,6 @@ public class SettingsController : ControllerBase
     public async Task<ActionResult<BrandingSettingsDto>> UpdateBranding([FromBody] UpdateBrandingSettingsRequest req)
     {
         var s = await _settings.UpdateBrandingAsync(req, User.GetUserId());
-        return Ok(new BrandingSettingsDto(
-            s.SiteName,
-            s.Tagline,
-            s.HeroBadge,
-            s.HeroTitle,
-            s.HeroSubtitle,
-            s.CentralConfigUrl,
-            s.ShowEcosystemBar,
-            s.LastUpdatedAt,
-            PlatformSettingsService.ToAdDto(s.Ads)));
+        return Ok(await _settings.ToBrandingDtoAsync(s));
     }
 }
