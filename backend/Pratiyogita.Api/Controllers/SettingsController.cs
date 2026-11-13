@@ -76,4 +76,36 @@ public class SettingsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> DeleteQrImage() =>
         await _settings.ClearUploadedQrAsync(User.GetUserId()) ? NoContent() : NotFound();
+
+    [HttpGet("branding")]
+    [AllowAnonymous]
+    public async Task<ActionResult<BrandingSettingsDto>> GetBranding()
+    {
+        var s = await _settings.GetAsync();
+        return Ok(new BrandingSettingsDto(
+            string.IsNullOrWhiteSpace(s.SiteName) ? "Pratiyogita" : s.SiteName,
+            s.Tagline,
+            s.HeroBadge,
+            s.HeroTitle,
+            s.HeroSubtitle,
+            string.IsNullOrWhiteSpace(s.CentralConfigUrl) ? "https://id.keshavsingh.in/api/config" : s.CentralConfigUrl,
+            s.ShowEcosystemBar,
+            s.LastUpdatedAt));
+    }
+
+    [HttpPut("branding")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<ActionResult<BrandingSettingsDto>> UpdateBranding([FromBody] UpdateBrandingSettingsRequest req)
+    {
+        var s = await _settings.UpdateBrandingAsync(req, User.GetUserId());
+        return Ok(new BrandingSettingsDto(
+            s.SiteName,
+            s.Tagline,
+            s.HeroBadge,
+            s.HeroTitle,
+            s.HeroSubtitle,
+            s.CentralConfigUrl,
+            s.ShowEcosystemBar,
+            s.LastUpdatedAt));
+    }
 }

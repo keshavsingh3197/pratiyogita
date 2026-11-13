@@ -2,6 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { PaymentSettings } from '../models/domain.models';
+import { BrandingSettings } from './ecosystem-config.service';
+
+export interface UpdateBrandingSettingsRequest {
+  siteName: string;
+  tagline: string;
+  heroBadge: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  centralConfigUrl: string;
+  showEcosystemBar: boolean;
+}
 
 /** Runtime, DB-backed platform settings — currently just Payments. Reads are public; updates are
  *  Admin-only server-side (backend returns 403 for anyone else). */
@@ -32,5 +43,13 @@ export class SettingsService {
 
   deleteQrImage() {
     return this.http.delete<void>(`${this.base}/payments/qr-image`);
+  }
+
+  getBranding() {
+    return this.http.get<BrandingSettings>(`${this.base}/branding`);
+  }
+
+  updateBranding(req: UpdateBrandingSettingsRequest) {
+    return this.http.put<BrandingSettings>(`${this.base}/branding`, req);
   }
 }

@@ -1,21 +1,32 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { EcosystemConfigService } from '../../core/services/ecosystem-config.service';
 
 @Component({
   selector: 'app-home',
   imports: [RouterLink],
   template: `
     <section class="hero">
-      <span class="badge">School exams &middot; Olympiads &middot; Sports tournaments</span>
-      <h1>One place for every competition, every result, every topper.</h1>
+      <span class="badge">{{ ecosystem.heroBadge() }}</span>
+      <h1>{{ ecosystem.heroTitle() }}</h1>
       <p class="hero-subtitle">
-        Schedules, live registrations, published results and location/school-wise leaderboards —
-        for academic exams and sports tournaments alike.
+        {{ ecosystem.heroSubtitle() }}
       </p>
-      <div class="row">
+      <div class="row cta-row">
         <a routerLink="/competitions" class="btn btn-primary">Browse competitions</a>
         <a routerLink="/leaderboard" class="btn btn-outline">See toppers</a>
       </div>
+
+      @if (ecosystem.footerChannels().length > 0) {
+        <div class="community-strip">
+          <span class="comm-label">Updates &amp; Highlights:</span>
+          @for (ch of ecosystem.footerChannels(); track ch.id || ch.key) {
+            <a [href]="ch.url" target="_blank" rel="noopener" class="comm-pill">
+              📺 {{ ch.name }}
+            </a>
+          }
+        </div>
+      }
     </section>
 
     <section class="grid grid-cards">
@@ -41,16 +52,36 @@ import { RouterLink } from '@angular/router';
     .hero {
       text-align: center;
       padding: var(--space-8) 0 var(--space-8);
-      max-width: 720px;
+      max-width: 760px;
       margin: 0 auto var(--space-8);
     }
     .hero .badge { margin-bottom: var(--space-4); }
     .hero-subtitle { font-size: 1.05rem; }
-    .hero .row { justify-content: center; }
-    .link-card { color: inherit; display: block; }
-    .link-card:hover { text-decoration: none; }
+    .hero .cta-row { justify-content: center; flex-wrap: wrap; }
+    .community-strip {
+      margin-top: var(--space-5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .comm-label { font-size: 0.8rem; color: var(--fg-muted); font-weight: 600; }
+    .comm-pill {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+    }
+    .link-card { color: inherit; display: block; transition: transform 0.15s ease; }
+    .link-card:hover { text-decoration: none; transform: translateY(-2px); }
     .link-card h3 { color: var(--brand-600); }
     .link-card p { margin-bottom: 0; }
   `,
 })
-export class HomeComponent {}
+export class HomeComponent {
+  protected readonly ecosystem = inject(EcosystemConfigService);
+}
