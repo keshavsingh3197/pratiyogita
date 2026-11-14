@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { LocaleService, SUPPORTED_LANGUAGES } from '../../core/services/locale.service';
@@ -62,7 +63,9 @@ import { School, StudentProfile } from '../../core/models/domain.models';
             <input id="phone" [(ngModel)]="phone" name="phone" />
           </div>
         </div>
-        <button type="button" class="btn btn-primary" (click)="saveProfile()">Save profile</button>
+        <button type="button" class="btn btn-primary" (click)="saveProfile()" [disabled]="savingProfile()">
+          @if (savingProfile()) { <span class="btn-spin" aria-hidden="true"></span>Saving… } @else { Save profile }
+        </button>
         @if (saved()) {
           <p class="notice">Saved.</p>
         }
@@ -117,6 +120,7 @@ export class SettingsComponent {
   protected readonly languages = SUPPORTED_LANGUAGES;
   protected readonly schools = signal<School[]>([]);
   protected readonly saved = signal(false);
+  protected readonly savingProfile = signal(false);
   protected selectedLanguage = this.locale.language();
 
   protected schoolId = '';
@@ -142,7 +146,9 @@ export class SettingsComponent {
   }
 
   saveProfile(): void {
-    if (!this.schoolId || !this.firstName) return;
+    if (!this.schoolId || !this.firstName || this.savingProfile()) return;
+    this.saved.set(false);
+    this.savingProfile.set(true);
     this.profileApi
       .upsertMine({
         schoolId: this.schoolId,
@@ -152,6 +158,7 @@ export class SettingsComponent {
         dateOfBirth: this.dateOfBirth || undefined,
         phone: this.phone || undefined,
       })
+      .pipe(finalize(() => this.savingProfile.set(false)))
       .subscribe(() => this.saved.set(true));
   }
 }

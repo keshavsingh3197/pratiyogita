@@ -4,10 +4,11 @@ import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
 import { EcosystemConfigService } from './core/services/ecosystem-config.service';
 import { AdSlotComponent } from './features/shared/ad-slot/ad-slot.component';
+import { GlobalLoaderComponent } from './features/shared/loading/global-loader.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AdSlotComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AdSlotComponent, GlobalLoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -1,13 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { ContributionsService } from '../../core/services/contributions.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AuthService } from '../../core/services/auth.service';
+import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
 @Component({
   selector: 'app-contribute',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, LoadingStateComponent],
   template: `
     <h1>Contribute</h1>
     <p>
@@ -16,6 +18,9 @@ import { AuthService } from '../../core/services/auth.service';
     </p>
 
     <div class="grid contribute-grid">
+      @if (!upiChecked()) {
+        <app-loading-state variant="cards" [count]="1" label="Checking UPI configuration…" />
+      }
       @if (upiChecked()) {
         @if (upi(); as u) {
           <div class="card upi-card">
@@ -51,7 +56,9 @@ import { AuthService } from '../../core/services/auth.service';
                     <label for="cfgPayee">Payee name</label>
                     <input id="cfgPayee" [(ngModel)]="configPayeeName" name="cfgPayee" placeholder="Pratiyogita" />
                   </div>
-                  <button type="button" class="btn btn-primary" (click)="saveConfig()">Save</button>
+                  <button type="button" class="btn btn-primary" (click)="saveConfig()" [disabled]="savingConfig()">
+                    @if (savingConfig()) { <span class="btn-spin" aria-hidden="true"></span>Saving… } @else { Save }
+                  </button>
                 </div>
               } @else {
                 <button type="button" class="btn btn-outline" (click)="showConfigureForm.set(true)">
@@ -88,7 +95,9 @@ import { AuthService } from '../../core/services/auth.service';
         <label class="row anon-check">
           <input type="checkbox" [(ngModel)]="anonymous" name="anonymous" /> Contribute anonymously
         </label>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) { <span class="btn-spin" aria-hidden="true"></span>Submitting… } @else { Submit }
+        </button>
 
         @if (submitted()) {
           <p class="notice">Thanks! Your contribution is recorded and pending verification.</p>
@@ -118,6 +127,8 @@ export class ContributeComponent {
   protected readonly upiChecked = signal(false);
   protected readonly qrDataUrl = signal<string | null>(null);
   protected readonly submitted = signal(false);
+  protected readonly submitting = signal(false);
+  protected readonly savingConfig = signal(false);
   protected readonly showConfigureForm = signal(false);
 
   protected amount: number | null = null;
@@ -157,9 +168,11 @@ export class ContributeComponent {
   }
 
   saveConfig(): void {
-    if (!this.configVpa) return;
+    if (!this.configVpa || this.savingConfig()) return;
+    this.savingConfig.set(true);
     this.settingsApi
       .updatePayments({ upiVpa: this.configVpa, payeeName: this.configPayeeName || 'Pratiyogita' })
+      .pipe(finalize(() => this.savingConfig.set(false)))
       .subscribe(() => {
         this.showConfigureForm.set(false);
         this.loadUpiLink();
@@ -167,7 +180,9 @@ export class ContributeComponent {
   }
 
   submit(): void {
-    if (!this.amount || this.amount <= 0) return;
+    if (!this.amount || this.amount <= 0 || this.submitting()) return;
+    this.submitted.set(false);
+    this.submitting.set(true);
     this.contributionsApi
       .submit({
         contributorName: this.name || 'Anonymous',
@@ -177,6 +192,7 @@ export class ContributeComponent {
         transactionRef: this.transactionRef,
         isAnonymous: this.anonymous,
       })
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe(() => this.submitted.set(true));
   }
 }
