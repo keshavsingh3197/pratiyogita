@@ -12,6 +12,7 @@
     -->
     <UseLocalProjectReferences Condition="'$(UseLocalProjectReferences)' == '' and Exists('..\..\..\shared-security\src\KeshavSingh.Security\KeshavSingh.Security.csproj')">true</UseLocalProjectReferences>
     <SkipPrivatePackages Condition="'$(UseLocalProjectReferences)' == 'true' or '$(PACKAGES_READ_TOKEN)' == ''">true</SkipPrivatePackages>
+    <UserSecretsId>pratiyogita-local</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
