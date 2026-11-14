@@ -77,13 +77,13 @@ export class EcosystemConfigService {
 
   readonly ecosystemBarSites = computed(() =>
     this.websites()
-      .filter((w) => w.showInEcosystemBar)
+      .filter((w) => w.showInEcosystemBar && !['blog', 'blog-admin', 'admin', 'ghar-ledger'].includes((w.key || '').toLowerCase()))
       .sort((a, b) => a.sortOrder - b.sortOrder)
   );
 
   readonly footerSites = computed(() =>
     this.websites()
-      .filter((w) => w.showInEcosystemBar)
+      .filter((w) => w.showInEcosystemBar && !['blog', 'blog-admin', 'admin', 'ghar-ledger'].includes((w.key || '').toLowerCase()))
       .sort((a, b) => a.sortOrder - b.sortOrder)
   );
 
