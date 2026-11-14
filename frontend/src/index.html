@@ -8,8 +8,61 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <meta name="google-adsense-account" content="ca-pub-7890828429175364">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7890828429175364" crossorigin="anonymous"></script>
+  <style>
+    #boot-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      background: #f7f8fb;
+      color: #111827;
+      font-family: -apple-system, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      transition: opacity 0.22s ease;
+    }
+    #boot-loader.hidden { opacity: 0; pointer-events: none; }
+    #boot-loader .boot-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 1.55rem;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(67, 56, 202, 0.28);
+    }
+    #boot-loader .boot-ring {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 3px solid rgba(79, 70, 229, 0.18);
+      border-top-color: #4338ca;
+      animation: prati-boot-spin 0.75s linear infinite;
+    }
+    #boot-loader p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    @keyframes prati-boot-spin { to { transform: rotate(360deg); } }
+    @media (prefers-color-scheme: dark) {
+      #boot-loader { background: #0f1115; color: #f3f4f6; }
+      #boot-loader p { color: #9ca3af; }
+    }
+  </style>
 </head>
 <body>
+  <div id="boot-loader" role="status" aria-live="polite">
+    <div class="boot-badge" aria-hidden="true">P</div>
+    <div class="boot-ring" aria-hidden="true"></div>
+    <p>Loading Pratiyogita…</p>
+  </div>
   <app-root></app-root>
 </body>
 </html>

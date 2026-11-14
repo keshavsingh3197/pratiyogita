@@ -1,14 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { LocationsService } from '../../core/services/locations.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AdMonetizationConfig, EcosystemConfigService } from '../../core/services/ecosystem-config.service';
 import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from '../../core/models/domain.models';
+import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
 @Component({
   selector: 'app-master-data',
-  imports: [FormsModule],
+  imports: [FormsModule, LoadingStateComponent],
   template: `
     <h1>Manage master data &amp; platform settings</h1>
     <p>Admin-only. Locations, competition categories, payment target, and dynamic site branding are managed here.</p>
@@ -99,7 +101,9 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
           </div>
         </div>
         <div class="row action-row">
-          <button type="button" class="btn btn-primary" (click)="saveBranding()">Save branding settings</button>
+          <button type="button" class="btn btn-primary" (click)="saveBranding()" [disabled]="savingBranding()">
+            @if (savingBranding()) { <span class="btn-spin" aria-hidden="true"></span>Saving branding… } @else { Save branding settings }
+          </button>
           <a [href]="ecosystem.adminPortalUrl() + '/website'" target="_blank" rel="noopener" class="btn btn-outline">
             Manage Websites &amp; Channels in Central Admin →
           </a>
@@ -119,26 +123,32 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
           <input [(ngModel)]="newState" name="newState" placeholder="State" />
           <input [(ngModel)]="newDistrict" name="newDistrict" placeholder="District (optional)" />
           <input [(ngModel)]="newVillage" name="newVillage" placeholder="Village/town (optional)" />
-          <button type="button" class="btn btn-primary" (click)="addLocation()">Add</button>
+          <button type="button" class="btn btn-primary" (click)="addLocation()" [disabled]="addingLocation()">
+            @if (addingLocation()) { <span class="btn-spin" aria-hidden="true"></span>Adding… } @else { Add }
+          </button>
         </div>
         @if (locationError()) {
           <p class="error-text">{{ locationError() }}</p>
         }
-        <table>
-          <thead><tr><th>City</th><th>District</th><th>State</th><th>Country</th></tr></thead>
-          <tbody>
-            @for (l of locations(); track l.id) {
-              <tr>
-                <td>{{ l.city }}</td>
-                <td>{{ l.district }}</td>
-                <td>{{ l.state }}</td>
-                <td>{{ l.country }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="4">No locations yet.</td></tr>
-            }
-          </tbody>
-        </table>
+        @if (loadingLocations()) {
+          <app-loading-state variant="rows" [count]="3" label="Loading locations…" />
+        } @else {
+          <table>
+            <thead><tr><th>City</th><th>District</th><th>State</th><th>Country</th></tr></thead>
+            <tbody>
+              @for (l of locations(); track l.id) {
+                <tr>
+                  <td>{{ l.city }}</td>
+                  <td>{{ l.district }}</td>
+                  <td>{{ l.state }}</td>
+                  <td>{{ l.country }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4">No locations yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
       </section>
 
       <section class="card">
@@ -149,25 +159,31 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
             <option value="Academic">Academic</option>
             <option value="Sports">Sports</option>
           </select>
-          <button type="button" class="btn btn-primary" (click)="addCategory()">Add</button>
+          <button type="button" class="btn btn-primary" (click)="addCategory()" [disabled]="addingCategory()">
+            @if (addingCategory()) { <span class="btn-spin" aria-hidden="true"></span>Adding… } @else { Add }
+          </button>
         </div>
         @if (categoryError()) {
           <p class="error-text">{{ categoryError() }}</p>
         }
-        <table>
-          <thead><tr><th>Name</th><th>Type</th><th></th></tr></thead>
-          <tbody>
-            @for (c of categories(); track c.id) {
-              <tr>
-                <td>{{ c.name }}</td>
-                <td>{{ c.type }}</td>
-                <td><button type="button" class="btn btn-outline" (click)="deleteCategory(c.id)">Delete</button></td>
-              </tr>
-            } @empty {
-              <tr><td colspan="3">No categories yet.</td></tr>
-            }
-          </tbody>
-        </table>
+        @if (loadingCategories()) {
+          <app-loading-state variant="rows" [count]="3" label="Loading categories…" />
+        } @else {
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th></th></tr></thead>
+            <tbody>
+              @for (c of categories(); track c.id) {
+                <tr>
+                  <td>{{ c.name }}</td>
+                  <td>{{ c.type }}</td>
+                  <td><button type="button" class="btn btn-outline" (click)="deleteCategory(c.id)">Delete</button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="3">No categories yet.</td></tr>
+              }
+            </tbody>
+          </table>
+        }
       </section>
 
       <section class="card">
@@ -183,7 +199,9 @@ import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from 
             <input id="payeeName" [(ngModel)]="payeeName" name="payeeName" />
           </div>
         </div>
-        <button type="button" class="btn btn-primary" (click)="savePayments()">Save</button>
+        <button type="button" class="btn btn-primary" (click)="savePayments()" [disabled]="savingPayments()">
+          @if (savingPayments()) { <span class="btn-spin" aria-hidden="true"></span>Saving… } @else { Save }
+        </button>
         @if (paymentsSaved()) {
           <p class="notice">Saved — the Contribute page now uses this UPI id.</p>
         }
@@ -217,6 +235,12 @@ export class MasterDataComponent {
 
   protected readonly locations = signal<Location[]>([]);
   protected readonly categories = signal<CompetitionCategory[]>([]);
+  protected readonly loadingLocations = signal(true);
+  protected readonly loadingCategories = signal(true);
+  protected readonly savingBranding = signal(false);
+  protected readonly addingLocation = signal(false);
+  protected readonly addingCategory = signal(false);
+  protected readonly savingPayments = signal(false);
   protected readonly locationError = signal<string | null>(null);
   protected readonly categoryError = signal<string | null>(null);
   protected readonly paymentsSaved = signal(false);
@@ -262,7 +286,9 @@ export class MasterDataComponent {
   }
 
   saveBranding(): void {
+    if (this.savingBranding()) return;
     this.brandingSaved.set(false);
+    this.savingBranding.set(true);
     this.settingsApi
       .updateBranding({
         siteName: this.siteName || 'Pratiyogita',
@@ -274,6 +300,7 @@ export class MasterDataComponent {
         showEcosystemBar: this.showEcosystemBar,
         ads: { ...this.adsForm },
       })
+      .pipe(finalize(() => this.savingBranding.set(false)))
       .subscribe(() => {
         this.ecosystem.refresh();
         this.brandingSaved.set(true);
@@ -300,7 +327,8 @@ export class MasterDataComponent {
 
   addLocation(): void {
     this.locationError.set(null);
-    if (!this.newCity || !this.newState) return;
+    if (!this.newCity || !this.newState || this.addingLocation()) return;
+    this.addingLocation.set(true);
     this.locationsApi
       .create({
         city: this.newCity,
@@ -308,6 +336,7 @@ export class MasterDataComponent {
         district: this.newDistrict || undefined,
         villageOrTown: this.newVillage || undefined,
       })
+      .pipe(finalize(() => this.addingLocation.set(false)))
       .subscribe({
         next: () => {
           this.newCity = this.newState = this.newDistrict = this.newVillage = '';
@@ -319,14 +348,17 @@ export class MasterDataComponent {
 
   addCategory(): void {
     this.categoryError.set(null);
-    if (!this.newCategoryName) return;
-    this.categoriesApi.create({ name: this.newCategoryName, type: this.newCategoryType }).subscribe({
-      next: () => {
-        this.newCategoryName = '';
-        this.reloadCategories();
-      },
-      error: () => this.categoryError.set('Could not add that category — sign-in may have expired.'),
-    });
+    if (!this.newCategoryName || this.addingCategory()) return;
+    this.addingCategory.set(true);
+    this.categoriesApi.create({ name: this.newCategoryName, type: this.newCategoryType })
+      .pipe(finalize(() => this.addingCategory.set(false)))
+      .subscribe({
+        next: () => {
+          this.newCategoryName = '';
+          this.reloadCategories();
+        },
+        error: () => this.categoryError.set('Could not add that category — sign-in may have expired.'),
+      });
   }
 
   deleteCategory(id: string): void {
@@ -334,18 +366,26 @@ export class MasterDataComponent {
   }
 
   savePayments(): void {
-    if (!this.upiVpa) return;
+    if (!this.upiVpa || this.savingPayments()) return;
     this.paymentsSaved.set(false);
+    this.savingPayments.set(true);
     this.settingsApi
       .updatePayments({ upiVpa: this.upiVpa, payeeName: this.payeeName || this.siteName || 'Pratiyogita' })
+      .pipe(finalize(() => this.savingPayments.set(false)))
       .subscribe(() => this.paymentsSaved.set(true));
   }
 
   private reloadLocations(): void {
-    this.locationsApi.getAll().subscribe((list) => this.locations.set(list));
+    this.loadingLocations.set(true);
+    this.locationsApi.getAll()
+      .pipe(finalize(() => this.loadingLocations.set(false)))
+      .subscribe((list) => this.locations.set(list));
   }
 
   private reloadCategories(): void {
-    this.categoriesApi.getAll().subscribe((list) => this.categories.set(list));
+    this.loadingCategories.set(true);
+    this.categoriesApi.getAll()
+      .pipe(finalize(() => this.loadingCategories.set(false)))
+      .subscribe((list) => this.categories.set(list));
   }
 }

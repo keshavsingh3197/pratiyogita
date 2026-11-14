@@ -1,13 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { LeaderboardService } from '../../core/services/leaderboard.service';
 import { LocationsService } from '../../core/services/locations.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { CompetitionCategory, Location, TopContributor, TopperEntry } from '../../core/models/domain.models';
+import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
 @Component({
   selector: 'app-leaderboard',
-  imports: [FormsModule],
+  imports: [FormsModule, LoadingStateComponent],
   template: `
     <h1>Top Performers</h1>
     <p>Filter by city or category to see location/field-wise rankings.</p>
@@ -33,7 +35,9 @@ import { CompetitionCategory, Location, TopContributor, TopperEntry } from '../.
       </div>
     </div>
 
-    @if (toppers().length) {
+    @if (loadingToppers()) {
+      <app-loading-state variant="rows" [count]="5" label="Loading top performers…" />
+    } @else if (toppers().length) {
       <table>
         <thead>
           <tr><th>Rank</th><th>Student</th><th>School</th><th>City</th><th>Competition</th><th>Score</th></tr>
@@ -56,7 +60,9 @@ import { CompetitionCategory, Location, TopContributor, TopperEntry } from '../.
     }
 
     <h2 class="contributors-heading">Top contributors</h2>
-    @if (contributors().length) {
+    @if (loadingContributors()) {
+      <app-loading-state variant="rows" [count]="3" label="Loading top contributors…" />
+    } @else if (contributors().length) {
       <ol class="contributors-list">
         @for (c of contributors(); track c.name; let i = $index) {
           <li class="card row">
@@ -89,6 +95,8 @@ export class LeaderboardComponent {
 
   protected readonly toppers = signal<TopperEntry[]>([]);
   protected readonly contributors = signal<TopContributor[]>([]);
+  protected readonly loadingToppers = signal(true);
+  protected readonly loadingContributors = signal(true);
   protected readonly cities = signal<string[]>([]);
   protected readonly categories = signal<CompetitionCategory[]>([]);
   protected city = '';
@@ -96,7 +104,11 @@ export class LeaderboardComponent {
 
   constructor() {
     this.reload();
-    this.leaderboardApi.getTopContributors().subscribe((list) => this.contributors.set(list));
+    this.loadingContributors.set(true);
+    this.leaderboardApi
+      .getTopContributors()
+      .pipe(finalize(() => this.loadingContributors.set(false)))
+      .subscribe((list) => this.contributors.set(list));
     // City/category options are admin-managed master data, not free text — keeps filtering reliable.
     this.locationsApi
       .getAll()
@@ -105,8 +117,10 @@ export class LeaderboardComponent {
   }
 
   reload(): void {
+    this.loadingToppers.set(true);
     this.leaderboardApi
       .getToppers({ city: this.city || undefined, category: this.category || undefined })
+      .pipe(finalize(() => this.loadingToppers.set(false)))
       .subscribe((list) => this.toppers.set(list));
   }
 }

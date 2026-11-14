@@ -337,3 +337,18 @@ tr:last-child td {
   color: #166534;
   font-weight: 600;
 }
+
+.btn-spin {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: currentColor;
+  animation: prati-btn-spin 0.7s linear infinite;
+  display: inline-block;
+  flex: none;
+}
+
+@keyframes prati-btn-spin {
+  to { transform: rotate(360deg); }
+}
