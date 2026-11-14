@@ -33,7 +33,9 @@ export class AdSenseService {
     const clean = clientId.trim();
     if (this.loadedClientId === clean) return true;
 
-    const existing = this.doc.querySelector<HTMLScriptElement>('script[data-pratiyogita-adsense="true"]');
+    const existing = this.doc.querySelector<HTMLScriptElement>(
+      'script[data-pratiyogita-adsense="true"], script[src*="pagead/js/adsbygoogle.js"]'
+    );
     if (existing) {
       this.loadedClientId = clean;
       return true;
