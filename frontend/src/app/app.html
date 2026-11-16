@@ -28,19 +28,33 @@
     </a>
 
     <nav class="row nav-links">
-      <a routerLink="/competitions" routerLinkActive="active">Competitions</a>
-      <a routerLink="/leaderboard" routerLinkActive="active">Leaderboard</a>
-      <a routerLink="/news" routerLinkActive="active">News</a>
-      <a routerLink="/contribute" routerLinkActive="active">Contribute</a>
+      <a routerLink="/competitions" routerLinkActive="active">{{ locale.t('pratiyogita.nav.competitions', 'Competitions') }}</a>
+      <a routerLink="/leaderboard" routerLinkActive="active">{{ locale.t('pratiyogita.nav.leaderboard', 'Leaderboard') }}</a>
+      <a routerLink="/winners" routerLinkActive="active">{{ locale.t('pratiyogita.nav.winners', 'Quiz Winners') }}</a>
+      <a routerLink="/news" routerLinkActive="active">{{ locale.t('pratiyogita.nav.news', 'News') }}</a>
+      <a routerLink="/contribute" routerLinkActive="active">{{ locale.t('pratiyogita.nav.contribute', 'Contribute') }}</a>
     </nav>
 
     <div class="row header-actions">
+      @if (locale.showPicker()) {
+        <div class="lang-toggle" role="group" aria-label="Language switcher">
+          @for (lang of locale.availableLanguages(); track lang.code) {
+            <button type="button"
+                    class="btn btn-outline lang-btn"
+                    [class.btn-primary]="locale.language() === lang.code"
+                    [disabled]="!locale.canSwitch()"
+                    (click)="locale.set(lang.code)">
+              {{ lang.shortLabel }}
+            </button>
+          }
+        </div>
+      }
       @if (auth.isAuthenticated()) {
         @if (auth.hasRole('Admin')) {
-          <a routerLink="/admin/data" class="btn btn-outline">Manage data</a>
+          <a routerLink="/admin/data" class="btn btn-outline">{{ locale.t('pratiyogita.nav.manageData', 'Manage data') }}</a>
         }
-        <a routerLink="/register-school" class="btn btn-outline">Register school</a>
-        <a routerLink="/settings" class="icon-btn" title="Settings" aria-label="Settings">⚙️</a>
+        <a routerLink="/register-school" class="btn btn-outline">{{ locale.t('pratiyogita.nav.registerSchool', 'Register school') }}</a>
+        <a routerLink="/settings" class="icon-btn" [title]="locale.t('pratiyogita.nav.settings', 'Settings')" [attr.aria-label]="locale.t('pratiyogita.nav.settings', 'Settings')">⚙️</a>
         <button type="button" class="btn btn-outline" (click)="logout()">Sign out</button>
       } @else {
         <button type="button" class="btn btn-primary" (click)="login()">Sign in</button>

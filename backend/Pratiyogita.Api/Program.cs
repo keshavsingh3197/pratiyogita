@@ -35,6 +35,8 @@ builder.Services.AddSingleton<ContributionItemService>();
 builder.Services.AddSingleton<NewsService>();
 builder.Services.AddSingleton<CentralAdminConfigReader>();
 builder.Services.AddSingleton<PlatformSettingsService>();
+builder.Services.AddSingleton<GoogleYouTubeVerifyService>();
+builder.Services.AddSingleton<QuizWinnersService>();
 
 builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection(PaymentOptions.Section));
 
@@ -97,6 +99,7 @@ builder.Services.AddRateLimiter(options =>
         }));
 });
 
+builder.Services.AddSingleton<CentralLocalizationService>();
 builder.Services.AddHealthChecks();
 
 // Behind Render's TLS-terminating proxy: honour X-Forwarded-* so the app sees the real client IP
@@ -150,5 +153,6 @@ await app.Services.GetRequiredService<ContributionService>().EnsureIndexesAsync(
 await app.Services.GetRequiredService<ContributionItemService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<NewsService>().EnsureIndexesAsync();
 await app.Services.GetRequiredService<PlatformSettingsService>().InitAsync();
+await app.Services.GetRequiredService<QuizWinnersService>().EnsureIndexesAsync();
 
 app.Run();

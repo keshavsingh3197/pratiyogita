@@ -18,6 +18,11 @@ export const routes: Routes = [
       import('./features/leaderboard/leaderboard.component').then((m) => m.LeaderboardComponent),
   },
   {
+    path: 'winners',
+    loadComponent: () =>
+      import('./features/winners/hall-of-winners.component').then((m) => m.HallOfWinnersComponent),
+  },
+  {
     path: 'news',
     loadComponent: () => import('./features/news/news.component').then((m) => m.NewsComponent),
   },

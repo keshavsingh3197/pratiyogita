@@ -5,16 +5,16 @@ import { finalize } from 'rxjs';
 import { ContributionsService } from '../../core/services/contributions.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AuthService } from '../../core/services/auth.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
 @Component({
   selector: 'app-contribute',
   imports: [FormsModule, RouterLink, LoadingStateComponent],
   template: `
-    <h1>Contribute</h1>
+    <h1>{{ locale.t('pratiyogita.contribute.title', 'Contribute') }}</h1>
     <p>
-      Pay any amount via Google Pay, PhonePe, Paytm or any UPI app, then paste the reference number
-      below so we can record and verify your contribution.
+      {{ locale.t('pratiyogita.contribute.subtitle', 'Pay any amount via Google Pay, PhonePe, Paytm or any UPI app, then paste the reference number below so we can record and verify your contribution.') }}
     </p>
 
     <div class="grid contribute-grid">
@@ -122,6 +122,7 @@ export class ContributeComponent {
   private contributionsApi = inject(ContributionsService);
   private settingsApi = inject(SettingsService);
   protected readonly auth = inject(AuthService);
+  protected readonly locale = inject(LocaleService);
 
   protected readonly upi = signal<{ link: string; vpa: string; payeeName: string } | null>(null);
   protected readonly upiChecked = signal(false);

@@ -1,9 +1,15 @@
+using System.Security.Cryptography;
+using KeshavSingh.Security;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 
 namespace Pratiyogita.Api.Services;
 
-public sealed record CentralPratiyogitaConfigSnapshot(string? AdSenseClientId);
+public sealed record CentralPratiyogitaConfigSnapshot(
+    string? AdSenseClientId,
+    string? GoogleOAuthClientId = null,
+    string? GoogleOAuthClientSecret = null);
 
 /// <summary>
 /// Reads shared ecosystem settings (AdSense Publisher ID) directly from Central Admin
@@ -16,6 +22,7 @@ public sealed class CentralAdminConfigReader
     private readonly string _documentId;
     private readonly ILogger<CentralAdminConfigReader> _logger;
     private readonly Func<CancellationToken, Task<CentralPratiyogitaConfigSnapshot?>>? _overrideLoader;
+    private readonly Lazy<DataProtector?> _protector;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     private CentralPratiyogitaConfigSnapshot? _cached;
@@ -25,6 +32,7 @@ public sealed class CentralAdminConfigReader
     {
         _logger = logger;
         _documentId = FirstNonEmpty(configuration["CentralMongo:DocumentId"]) ?? "app-settings";
+        _protector = new Lazy<DataProtector?>(() => BuildProtector(configuration, logger));
         var enabled = !string.Equals(configuration["CentralMongo:Enabled"], "false", StringComparison.OrdinalIgnoreCase);
         if (!enabled) return;
 
@@ -58,6 +66,7 @@ public sealed class CentralAdminConfigReader
         _overrideLoader = overrideLoader ?? throw new ArgumentNullException(nameof(overrideLoader));
         _logger = logger;
         _documentId = "app-settings";
+        _protector = new Lazy<DataProtector?>(() => null);
     }
 
     public bool IsConfigured => _collection is not null || _overrideLoader is not null;
@@ -89,7 +98,12 @@ public sealed class CentralAdminConfigReader
                     .FirstOrDefaultAsync(ct)
                     .ConfigureAwait(false);
 
-                loaded = doc is null ? EmptySnapshot : new CentralPratiyogitaConfigSnapshot(FirstNonEmpty(doc.AdSenseClientId));
+                loaded = doc is null
+                    ? EmptySnapshot
+                    : new CentralPratiyogitaConfigSnapshot(
+                        FirstNonEmpty(doc.AdSenseClientId),
+                        FirstNonEmpty(doc.GoogleOAuthClientId),
+                        DecryptOptional(doc.GoogleOAuthClientSecretEncrypted));
             }
 
             _cached = loaded;
@@ -111,6 +125,37 @@ public sealed class CentralAdminConfigReader
 
     public void InvalidateCache() => _cacheExpiresAtUtc = DateTime.MinValue;
 
+    private string? DecryptOptional(string? cipher)
+    {
+        if (string.IsNullOrWhiteSpace(cipher)) return null;
+        try
+        {
+            return _protector.Value is { } p ? FirstNonEmpty(p.Decrypt(cipher)) : null;
+        }
+        catch (Exception ex) when (ex is FormatException or CryptographicException or InvalidOperationException)
+        {
+            _logger.LogWarning("Central Admin Google OAuth secret could not be decrypted with configured Encryption:DataKey.");
+            return null;
+        }
+    }
+
+    private static DataProtector? BuildProtector(IConfiguration configuration, ILogger<CentralAdminConfigReader> logger)
+    {
+        var dataKey = FirstNonEmpty(configuration["Encryption:DataKey"], Environment.GetEnvironmentVariable("Encryption__DataKey"));
+        if (string.IsNullOrWhiteSpace(dataKey)) return null;
+        try
+        {
+            var opts = new EncryptionOptions { DataKey = dataKey };
+            configuration.GetSection(EncryptionOptions.Section).Bind(opts);
+            return new DataProtector(Microsoft.Extensions.Options.Options.Create(opts));
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Invalid Encryption:DataKey configuration; encrypted central OAuth secret unavailable.");
+            return null;
+        }
+    }
+
     private static string? FirstNonEmpty(params string?[] candidates) =>
         candidates.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))?.Trim();
 
@@ -122,5 +167,7 @@ public sealed class CentralAdminConfigReader
         [BsonId]
         public string Id { get; set; } = string.Empty;
         public string? AdSenseClientId { get; set; }
+        public string? GoogleOAuthClientId { get; set; }
+        public string? GoogleOAuthClientSecretEncrypted { get; set; }
     }
 }

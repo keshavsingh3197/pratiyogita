@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EcosystemConfigService } from '../../core/services/ecosystem-config.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { AdSlotComponent } from '../shared/ad-slot/ad-slot.component';
 
 @Component({
@@ -14,13 +15,14 @@ import { AdSlotComponent } from '../shared/ad-slot/ad-slot.component';
         {{ ecosystem.heroSubtitle() }}
       </p>
       <div class="row cta-row">
-        <a routerLink="/competitions" class="btn btn-primary">Browse competitions</a>
-        <a routerLink="/leaderboard" class="btn btn-outline">See toppers</a>
+        <a routerLink="/competitions" class="btn btn-primary">{{ locale.t('pratiyogita.home.exploreCompetitions', 'Browse competitions') }}</a>
+        <a routerLink="/leaderboard" class="btn btn-outline">{{ locale.t('pratiyogita.home.viewLeaderboard', 'See toppers') }}</a>
+        <a routerLink="/winners" class="btn btn-outline">🏆 {{ locale.t('pratiyogita.home.viewWinners', 'Live Quiz Winners') }}</a>
       </div>
 
       @if (ecosystem.footerChannels().length > 0) {
         <div class="community-strip">
-          <span class="comm-label">Updates &amp; Highlights:</span>
+          <span class="comm-label">{{ locale.t('pratiyogita.home.updatesHighlights', 'Updates & Highlights:') }}</span>
           @for (ch of ecosystem.footerChannels(); track ch.id || ch.key) {
             <a [href]="ch.url" target="_blank" rel="noopener" class="comm-pill">
               📺 {{ ch.name }}
@@ -32,20 +34,20 @@ import { AdSlotComponent } from '../shared/ad-slot/ad-slot.component';
 
     <section class="grid grid-cards">
       <a routerLink="/competitions" class="card card-hover link-card">
-        <h3>Competitions &amp; Tournaments</h3>
-        <p>Academic olympiads and sports tournaments — schedules and registration.</p>
+        <h3>{{ locale.t('pratiyogita.home.card.compTitle', 'Competitions & Tournaments') }}</h3>
+        <p>{{ locale.t('pratiyogita.home.card.compDesc', 'Academic olympiads and sports tournaments — schedules and registration.') }}</p>
       </a>
       <a routerLink="/leaderboard" class="card card-hover link-card">
-        <h3>Toppers &amp; Contributors</h3>
-        <p>Rankings by school, city and category — plus who's supporting the platform.</p>
+        <h3>{{ locale.t('pratiyogita.home.card.lbTitle', 'Toppers & Contributors') }}</h3>
+        <p>{{ locale.t('pratiyogita.home.card.lbDesc', "Rankings by school, city and category — plus who's supporting the platform.") }}</p>
       </a>
       <a routerLink="/news" class="card card-hover link-card">
-        <h3>Latest news</h3>
-        <p>Results announcements, deadlines and upcoming events.</p>
+        <h3>{{ locale.t('pratiyogita.home.card.newsTitle', 'Latest news') }}</h3>
+        <p>{{ locale.t('pratiyogita.home.card.newsDesc', 'Results announcements, deadlines and upcoming events.') }}</p>
       </a>
       <a routerLink="/contribute" class="card card-hover link-card">
-        <h3>Contribute</h3>
-        <p>Support via UPI — Google Pay, PhonePe, Paytm and more.</p>
+        <h3>{{ locale.t('pratiyogita.home.card.contribTitle', 'Contribute') }}</h3>
+        <p>{{ locale.t('pratiyogita.home.card.contribDesc', 'Support via UPI — Google Pay, PhonePe, Paytm and more.') }}</p>
       </a>
     </section>
 
@@ -87,4 +89,5 @@ import { AdSlotComponent } from '../shared/ad-slot/ad-slot.component';
 })
 export class HomeComponent {
   protected readonly ecosystem = inject(EcosystemConfigService);
+  protected readonly locale = inject(LocaleService);
 }

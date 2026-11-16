@@ -5,6 +5,7 @@ import { LocationsService } from '../../core/services/locations.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AdMonetizationConfig, EcosystemConfigService } from '../../core/services/ecosystem-config.service';
+import { LocaleService, SiteLocalizationConfigDto } from '../../core/services/locale.service';
 import { CompetitionCategory, CompetitionType, Location, PaymentSettings } from '../../core/models/domain.models';
 import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
@@ -114,6 +115,48 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
         <p class="meta-hint">
           Synced {{ ecosystem.websites().length }} ecosystem app(s) and {{ ecosystem.footerChannels().length }} footer channel(s) from Central Config.
         </p>
+      </section>
+
+      <section class="card">
+        <h2>Language &amp; Localization Policy</h2>
+        <p>Default language comes from Central Admin MongoDB (<code>websites.pratiyogita</code>). Enable per-site override here only when this website needs its own settings.</p>
+        <p class="meta-hint">
+          Effective control: <strong>{{ locale.policy().controlledBy }}</strong> &middot;
+          Default: <strong>{{ locale.policy().defaultLocale.toUpperCase() }}</strong> &middot;
+          Enabled: <strong>{{ locale.policy().enabledLocales.join(', ') }}</strong>
+        </p>
+        <div class="grid payment-grid">
+          <div class="field checkbox-row full-span">
+            <label>
+              <input type="checkbox" [(ngModel)]="locForm.overrideCentralLocalization" name="overrideCentralLoc" />
+              Override Central Admin localization settings on Pratiyogita
+            </label>
+          </div>
+          <div class="field">
+            <label for="locDefault">Default Language</label>
+            <select id="locDefault" [(ngModel)]="locForm.defaultLocale" name="locDefault" [disabled]="!locForm.overrideCentralLocalization">
+              <option value="en">English (en)</option>
+              <option value="hi">हिन्दी (hi)</option>
+            </select>
+          </div>
+          <div class="field checkbox-row" style="gap: 1rem; flex-wrap: wrap;">
+            <label><input type="checkbox" [checked]="locHas('en')" (change)="toggleLocalLocale('en')" [disabled]="!locForm.overrideCentralLocalization" /> EN</label>
+            <label><input type="checkbox" [checked]="locHas('hi')" (change)="toggleLocalLocale('hi')" [disabled]="!locForm.overrideCentralLocalization" /> HI</label>
+          </div>
+          <div class="field checkbox-row full-span" style="justify-content: flex-start; gap: 1.25rem; flex-wrap: wrap;">
+            <label><input type="checkbox" [(ngModel)]="locForm.showLanguagePicker" name="locShowPicker" [disabled]="!locForm.overrideCentralLocalization" /> Show Language Switcher</label>
+            <label><input type="checkbox" [(ngModel)]="locForm.allowVisitorLanguageSwitch" name="locAllowSwitch" [disabled]="!locForm.overrideCentralLocalization" /> Allow Visitor Switch</label>
+            <label><input type="checkbox" [(ngModel)]="locForm.forceLocale" name="locForce" [disabled]="!locForm.overrideCentralLocalization" /> Force Default (Lock)</label>
+          </div>
+        </div>
+        <div class="row action-row">
+          <button type="button" class="btn btn-primary" (click)="saveLocalizationPolicy()" [disabled]="savingLocalization()">
+            @if (savingLocalization()) { <span class="btn-spin" aria-hidden="true"></span>Saving localization… } @else { Save localization policy }
+          </button>
+        </div>
+        @if (localizationSaved()) {
+          <p class="notice">Localization policy saved directly to MongoDB and applied live.</p>
+        }
       </section>
 
       <section class="card">
@@ -232,12 +275,15 @@ export class MasterDataComponent {
   private categoriesApi = inject(CategoriesService);
   private settingsApi = inject(SettingsService);
   protected readonly ecosystem = inject(EcosystemConfigService);
+  protected readonly locale = inject(LocaleService);
 
   protected readonly locations = signal<Location[]>([]);
   protected readonly categories = signal<CompetitionCategory[]>([]);
   protected readonly loadingLocations = signal(true);
   protected readonly loadingCategories = signal(true);
   protected readonly savingBranding = signal(false);
+  protected readonly savingLocalization = signal(false);
+  protected readonly localizationSaved = signal(false);
   protected readonly addingLocation = signal(false);
   protected readonly addingCategory = signal(false);
   protected readonly savingPayments = signal(false);
@@ -264,10 +310,32 @@ export class MasterDataComponent {
   protected centralConfigUrl = '';
   protected showEcosystemBar = true;
   protected adsForm: AdMonetizationConfig = this.emptyAds();
+  protected locForm: SiteLocalizationConfigDto = {
+    overrideCentralLocalization: false,
+    defaultLocale: 'en',
+    enabledLocales: ['en', 'hi'],
+    allowVisitorLanguageSwitch: true,
+    showLanguagePicker: true,
+    forceLocale: false,
+  };
 
   constructor() {
     this.reloadLocations();
     this.reloadCategories();
+    this.locale.getSiteLocalizationAdminState().subscribe({
+      next: (state) => {
+        const src = state.localSettings?.overrideCentralLocalization ? state.localSettings : state.centralAdminPolicy;
+        this.locForm = {
+          overrideCentralLocalization: state.localSettings?.overrideCentralLocalization ?? false,
+          defaultLocale: (src.defaultLocale === 'hi' ? 'hi' : 'en'),
+          enabledLocales: src.enabledLocales?.length ? [...src.enabledLocales] : ['en', 'hi'],
+          allowVisitorLanguageSwitch: src.allowVisitorLanguageSwitch,
+          showLanguagePicker: src.showLanguagePicker,
+          forceLocale: src.forceLocale,
+        };
+      },
+      error: () => {},
+    });
     this.settingsApi.getPayments().subscribe((s: PaymentSettings) => {
       this.upiVpa = s.upiVpa ?? '';
       this.payeeName = s.payeeName;
@@ -283,6 +351,30 @@ export class MasterDataComponent {
       this.centralAdSenseClientId.set(b.centralAdSenseClientId || '');
       this.adsForm = { ...this.emptyAds(), ...(b.ads || {}) };
     });
+  }
+
+  locHas(code: string): boolean {
+    return this.locForm.enabledLocales.includes(code);
+  }
+
+  toggleLocalLocale(code: string): void {
+    const next = new Set(this.locForm.enabledLocales);
+    if (next.has(code)) {
+      if (code === this.locForm.defaultLocale || next.size <= 1) return;
+      next.delete(code);
+    } else {
+      next.add(code);
+    }
+    this.locForm.enabledLocales = [...next];
+  }
+
+  saveLocalizationPolicy(): void {
+    if (this.savingLocalization()) return;
+    this.localizationSaved.set(false);
+    this.savingLocalization.set(true);
+    this.locale.updateSiteLocalization({ ...this.locForm })
+      .pipe(finalize(() => this.savingLocalization.set(false)))
+      .subscribe(() => this.localizationSaved.set(true));
   }
 
   saveBranding(): void {
