@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
 import { EcosystemConfigService } from './core/services/ecosystem-config.service';
+import { LocaleService } from './core/services/locale.service';
 import { AdSlotComponent } from './features/shared/ad-slot/ad-slot.component';
 import { GlobalLoaderComponent } from './features/shared/loading/global-loader.component';
 
@@ -15,6 +16,7 @@ import { GlobalLoaderComponent } from './features/shared/loading/global-loader.c
 export class App {
   protected readonly auth = inject(AuthService);
   protected readonly ecosystem = inject(EcosystemConfigService);
+  protected readonly locale = inject(LocaleService);
   // Instantiated here (not just used) so its constructor effect applies the stored theme on boot.
   private readonly theme = inject(ThemeService);
   protected readonly year = new Date().getFullYear();

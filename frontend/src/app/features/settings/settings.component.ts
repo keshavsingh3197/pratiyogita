@@ -13,11 +13,11 @@ import { School, StudentProfile } from '../../core/models/domain.models';
   selector: 'app-settings',
   imports: [FormsModule],
   template: `
-    <h1>Settings</h1>
+    <h1>{{ locale.t('pratiyogita.settings.title', 'Settings') }}</h1>
 
     <div class="stack settings-sections">
       <section class="card">
-        <h2>My details</h2>
+        <h2>{{ locale.t('pratiyogita.settings.myDetails', 'My details') }}</h2>
         <p>
           Your account (name, email, sign-in) is managed centrally in your
           <a [href]="ecosystem.adminPortalUrl()" target="_blank" rel="noopener">SSO Identity Portal</a>.
@@ -72,7 +72,7 @@ import { School, StudentProfile } from '../../core/models/domain.models';
       </section>
 
       <section class="card">
-        <h2>Appearance</h2>
+        <h2>{{ locale.t('pratiyogita.settings.appearance', 'Appearance') }}</h2>
         <div class="row">
           <button type="button" class="btn" [class.btn-primary]="theme.theme() === 'light'"
                   [class.btn-outline]="theme.theme() !== 'light'" (click)="theme.set('light')">
@@ -86,14 +86,19 @@ import { School, StudentProfile } from '../../core/models/domain.models';
       </section>
 
       <section class="card">
-        <h2>Language</h2>
+        <h2>{{ locale.t('pratiyogita.settings.language', 'Language') }}</h2>
         <div class="field lang-field">
-          <select [(ngModel)]="selectedLanguage" name="language" (ngModelChange)="locale.set($event)">
-            @for (l of languages; track l.code) {
+          <select [ngModel]="locale.language()" name="language" (ngModelChange)="locale.set($event)"
+                  [disabled]="!locale.canSwitch()">
+            @for (l of locale.availableLanguages(); track l.code) {
               <option [value]="l.code">{{ l.label }}</option>
             }
           </select>
-          <small>More of the app will be translated as this preference is wired up further.</small>
+          @if (!locale.canSwitch()) {
+            <small>Language is locked by site/admin policy ({{ locale.policy().controlledBy }}).</small>
+          } @else {
+            <small>{{ locale.t('ecosystem.language.adminManaged', 'Controlled via Admin & Site Settings') }}</small>
+          }
         </div>
       </section>
     </div>

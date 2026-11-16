@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 import { CompetitionsService } from '../../core/services/competitions.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { Competition } from '../../core/models/domain.models';
 import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
@@ -11,8 +12,8 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
   template: `
     <div class="row page-head">
       <div>
-        <h1>Competitions &amp; Tournaments</h1>
-        <p>Academic exams/olympiads and sports tournaments, side by side.</p>
+        <h1>{{ locale.t('pratiyogita.competitions.title', 'Competitions & Tournaments') }}</h1>
+        <p>{{ locale.t('pratiyogita.competitions.subtitle', 'Academic exams/olympiads and sports tournaments, side by side.') }}</p>
       </div>
     </div>
 
@@ -35,7 +36,7 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
         }
       </div>
     } @else {
-      <div class="empty-state">No competitions published yet — check back soon.</div>
+      <div class="empty-state">{{ locale.t('pratiyogita.competitions.empty', 'No competitions published yet — check back soon.') }}</div>
     }
   `,
   styles: `
@@ -47,6 +48,7 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
 })
 export class CompetitionsComponent {
   private competitionsApi = inject(CompetitionsService);
+  protected readonly locale = inject(LocaleService);
   protected readonly competitions = signal<Competition[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 import { NewsService } from '../../core/services/news.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { NewsPost } from '../../core/models/domain.models';
 import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
@@ -9,8 +10,8 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
   selector: 'app-news',
   imports: [DatePipe, LoadingStateComponent],
   template: `
-    <h1>News</h1>
-    <p>What's next — results announcements, deadlines and upcoming events.</p>
+    <h1>{{ locale.t('pratiyogita.news.title', 'News') }}</h1>
+    <p>{{ locale.t('pratiyogita.news.subtitle', "What's next — results announcements, deadlines and upcoming events.") }}</p>
 
     @if (loading() && !posts().length) {
       <app-loading-state variant="rows" [count]="4" label="Loading latest announcements…" />
@@ -27,7 +28,7 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
         }
       </div>
     } @else {
-      <div class="empty-state">No news yet — check back soon.</div>
+      <div class="empty-state">{{ locale.t('pratiyogita.news.empty', 'No news yet — check back soon.') }}</div>
     }
   `,
   styles: `
@@ -36,6 +37,7 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
 })
 export class NewsComponent {
   private newsApi = inject(NewsService);
+  protected readonly locale = inject(LocaleService);
   protected readonly posts = signal<NewsPost[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);

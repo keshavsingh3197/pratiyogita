@@ -2,13 +2,14 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { SchoolsService } from '../../core/services/schools.service';
+import { LocaleService } from '../../core/services/locale.service';
 
 @Component({
   selector: 'app-register-school',
   imports: [FormsModule],
   template: `
-    <h1>Register a school</h1>
-    <p>Submitted schools are reviewed by an admin before they appear publicly or can enter competitions.</p>
+    <h1>{{ locale.t('pratiyogita.registerSchool.title', 'Register a school') }}</h1>
+    <p>{{ locale.t('pratiyogita.registerSchool.subtitle', 'Submitted schools are reviewed by an admin before they appear publicly or can enter competitions.') }}</p>
 
     <form class="card form-card" (submit)="submit(); $event.preventDefault()">
       <div class="field">
@@ -28,7 +29,7 @@ import { SchoolsService } from '../../core/services/schools.service';
         <input id="address" [(ngModel)]="address" name="address" />
       </div>
       <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-        @if (submitting()) { <span class="btn-spin" aria-hidden="true"></span>Submitting… } @else { Submit for approval }
+        @if (submitting()) { <span class="btn-spin" aria-hidden="true"></span>Submitting… } @else { {{ locale.t('pratiyogita.registerSchool.submit', 'Submit for approval') }} }
       </button>
 
       @if (submitted()) {
@@ -46,6 +47,7 @@ import { SchoolsService } from '../../core/services/schools.service';
 })
 export class RegisterSchoolComponent {
   private schoolsApi = inject(SchoolsService);
+  protected readonly locale = inject(LocaleService);
   protected readonly submitted = signal(false);
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);

@@ -4,6 +4,7 @@ import { finalize } from 'rxjs';
 import { LeaderboardService } from '../../core/services/leaderboard.service';
 import { LocationsService } from '../../core/services/locations.service';
 import { CategoriesService } from '../../core/services/categories.service';
+import { LocaleService } from '../../core/services/locale.service';
 import { CompetitionCategory, Location, TopContributor, TopperEntry } from '../../core/models/domain.models';
 import { LoadingStateComponent } from '../shared/loading/loading-state.component';
 
@@ -11,23 +12,23 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
   selector: 'app-leaderboard',
   imports: [FormsModule, LoadingStateComponent],
   template: `
-    <h1>Top Performers</h1>
-    <p>Filter by city or category to see location/field-wise rankings.</p>
+    <h1>{{ locale.t('pratiyogita.leaderboard.title', 'Top Performers') }}</h1>
+    <p>{{ locale.t('pratiyogita.leaderboard.subtitle', 'Filter by city or category to see location/field-wise rankings.') }}</p>
 
     <div class="card filter-bar">
       <div class="field">
-        <label for="city">City</label>
+        <label for="city">{{ locale.t('pratiyogita.leaderboard.city', 'City') }}</label>
         <select id="city" [(ngModel)]="city" (ngModelChange)="reload()">
-          <option value="">All cities</option>
+          <option value="">{{ locale.t('pratiyogita.leaderboard.allCities', 'All cities') }}</option>
           @for (c of cities(); track c) {
             <option [value]="c">{{ c }}</option>
           }
         </select>
       </div>
       <div class="field">
-        <label for="category">Category</label>
+        <label for="category">{{ locale.t('pratiyogita.leaderboard.category', 'Category') }}</label>
         <select id="category" [(ngModel)]="category" (ngModelChange)="reload()">
-          <option value="">All categories</option>
+          <option value="">{{ locale.t('pratiyogita.leaderboard.allCategories', 'All categories') }}</option>
           @for (c of categories(); track c.id) {
             <option [value]="c.name">{{ c.name }}</option>
           }
@@ -59,7 +60,7 @@ import { LoadingStateComponent } from '../shared/loading/loading-state.component
       <div class="empty-state">No results published yet for these filters.</div>
     }
 
-    <h2 class="contributors-heading">Top contributors</h2>
+    <h2 class="contributors-heading">{{ locale.t('pratiyogita.leaderboard.topContributors', 'Top contributors') }}</h2>
     @if (loadingContributors()) {
       <app-loading-state variant="rows" [count]="3" label="Loading top contributors…" />
     } @else if (contributors().length) {
@@ -92,6 +93,7 @@ export class LeaderboardComponent {
   private leaderboardApi = inject(LeaderboardService);
   private locationsApi = inject(LocationsService);
   private categoriesApi = inject(CategoriesService);
+  protected readonly locale = inject(LocaleService);
 
   protected readonly toppers = signal<TopperEntry[]>([]);
   protected readonly contributors = signal<TopContributor[]>([]);
